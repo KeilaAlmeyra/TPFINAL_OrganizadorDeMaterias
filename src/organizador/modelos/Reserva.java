@@ -43,4 +43,30 @@ public class Reserva {
                 && otroInicio.isBefore(horaFin);
     }
 
+    
+    /**
+     * Verifica que el horario de finalizacion
+     * sea posterior al horario de inicio.
+     *
+     * @return true si el horario es valido.
+     */
+    public boolean horarioValido() {
+        return horaFin.isAfter(horaInicio);
+    }
+
+    /**
+     * Compara esta reserva con otra reserva
+     * para determinar si existe superposicion.
+     *
+     * @param otraReserva Reserva que se desea comparar.
+     * @return true si ambas reservas se superponen.
+     */
+    public boolean choca(Reserva otraReserva) {
+        return choca(
+                otraReserva.getEspacio(),
+                otraReserva.getFecha(),
+                otraReserva.getHoraInicio(),
+                otraReserva.getHoraFin()
+        );
+    }
 }
