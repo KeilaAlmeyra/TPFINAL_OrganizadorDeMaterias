@@ -71,4 +71,16 @@ public class Espacio {
         return esDelTipo(tipoRequerido)
                 && tieneCapacidad(cantidadAlumnos);
     }
+
+    /**
+     * Devuelve la informacion del espacio fisico.
+     *
+     * @return Descripcion del espacio.
+     */
+    public String getDescripcion() {
+        return "Codigo: " + id
+                + "\nNombre: " + nombre
+                + "\nTipo: " + tipoEspacio
+                + "\nCapacidad maxima: " + capacidadMaxima;
+    }
 }
