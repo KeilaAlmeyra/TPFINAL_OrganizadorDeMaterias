@@ -36,4 +36,26 @@ public class Espacio {
 
     @Override
     public String toString() { return nombre}
+
+     /**
+     * Verifica si el espacio tiene capacidad suficiente
+     * para una determinada cantidad de alumnos.
+     *
+     * @param cantidadAlumnos Cantidad de alumnos.
+     * @return true si tiene capacidad suficiente.
+     */
+    public boolean tieneCapacidad(int cantidadAlumnos) {
+        return cantidadAlumnos <= capacidadMaxima;
+    }
+
+    /**
+     * Verifica si el tipo de espacio coincide
+     * con el tipo solicitado.
+     *
+     * @param tipoRequerido Tipo de espacio solicitado.
+     * @return true si los tipos coinciden.
+     */
+    public boolean esDelTipo(String tipoRequerido) {
+        return tipoEspacio.equals(tipoRequerido);
+    }    
 }
