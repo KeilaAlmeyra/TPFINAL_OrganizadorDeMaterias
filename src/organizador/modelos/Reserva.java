@@ -91,4 +91,58 @@ public class Reserva {
     public boolean esEnFecha(LocalDate otraFecha) {
         return fecha.equals(otraFecha);
     }
+
+    /**
+     * Calcula la duracion de una reserva en minutos.
+     *
+     * @return Duracion de la reserva en minutos.
+     */
+    public long getDuracionMinutos() {
+        return java.time.Duration.between(horaInicio, horaFin).toMinutes();
+    }
+
+    /**
+     * Verifica si una hora se encuentra dentro
+     * del horario de la reserva.
+     *
+     * @param otraHora Hora que se desea consultar.
+     * @return true si la hora esta dentro de la reserva.
+     */
+    public boolean ocupaHorario(LocalTime otraHora) {
+        return !otraHora.isBefore(horaInicio)
+                && otraHora.isBefore(horaFin);
+    }
+
+    /**
+     * Verifica si un espacio se encuentra reservado
+     * en una fecha y hora determinadas.
+     *
+     * @param otroEspacio Espacio que se desea consultar.
+     * @param otraFecha Fecha que se desea consultar.
+     * @param otraHora Hora que se desea consultar.
+     * @return true si esta reserva ocupa el espacio
+     *         en la fecha y hora indicadas.
+     */
+    public boolean estaReservado(Espacio otroEspacio,
+                                 LocalDate otraFecha,
+                                 LocalTime otraHora) {
+
+        return espacio.getId().equals(otroEspacio.getId())
+                && esEnFecha(otraFecha)
+                && ocupaHorario(otraHora);
+    }
+
+    /**
+     * Devuelve la informacion de una reserva.
+     *
+     * @return Descripcion de la reserva.
+     */
+    public String getDescripcion() {
+        return "Reserva: " + id
+                + "\nEspacio: " + espacio.getNombre()
+                + "\nUsuario: " + usuario
+                + "\nFecha: " + fecha
+                + "\nHora de inicio: " + horaInicio
+                + "\nHora de fin: " + horaFin;
+    }
 }
