@@ -69,4 +69,26 @@ public class Reserva {
                 otraReserva.getHoraFin()
         );
     }
+
+    /**
+     * Verifica si la reserva pertenece
+     * a un usuario determinado.
+     *
+     * @param otroUsuario Usuario que se desea consultar.
+     * @return true si la reserva pertenece al usuario.
+     */
+    public boolean perteneceAUsuario(String otroUsuario) {
+        return usuario.equals(otroUsuario);
+    }
+
+    /**
+     * Verifica si la reserva corresponde
+     * a una fecha determinada.
+     *
+     * @param otraFecha Fecha que se desea consultar.
+     * @return true si las fechas coinciden.
+     */
+    public boolean esEnFecha(LocalDate otraFecha) {
+        return fecha.equals(otraFecha);
+    }
 }
