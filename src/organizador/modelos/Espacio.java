@@ -57,5 +57,18 @@ public class Espacio {
      */
     public boolean esDelTipo(String tipoRequerido) {
         return tipoEspacio.equals(tipoRequerido);
-    }    
+    }
+
+    /**
+     * Verifica si el espacio cumple con los requisitos
+     * de capacidad y tipo de espacio.
+     *
+     * @param tipoRequerido Tipo de espacio solicitado.
+     * @param cantidadAlumnos Cantidad de alumnos.
+     * @return true si el espacio cumple ambos requisitos.
+     */
+    public boolean esCompatible(String tipoRequerido, int cantidadAlumnos) {
+        return esDelTipo(tipoRequerido)
+                && tieneCapacidad(cantidadAlumnos);
+    }
 }
