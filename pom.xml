@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- Versión del modelo de configuración utilizado por Maven -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Configuración heredada de Spring Boot.
+         Permite administrar automáticamente las versiones
+         de las dependencias compatibles entre sí. -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.7</version>
+        <relativePath/>
+    </parent>
+
+    <!-- Identificación del proyecto -->
+    <groupId>org.organizador</groupId>
+    <artifactId>organizador-materias</artifactId>
+    <version>1.0.0</version>
+
+    <!-- Versión de Java que utiliza el proyecto -->
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
+    <!-- Dependencias: herramientas y bibliotecas
+         externas que necesita nuestra aplicación -->
+    <dependencies>
+
+        <!-- Spring Web: permite desarrollar la aplicación web,
+             recibir solicitudes HTTP y crear controladores. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf: permite generar páginas HTML
+             utilizando información proveniente de Java. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+    </dependencies>
+
+    <!-- Configuración de Maven para construir
+         y ejecutar nuestra aplicación Spring Boot. -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
