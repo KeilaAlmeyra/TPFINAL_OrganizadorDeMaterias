@@ -1,18 +1,19 @@
 package organizador.servicios;
 
 import organizador.modelos.Espacio;
+import organizador.repositorios.EspacioRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class GestorEspacios {
 
-    private final List<Espacio> espacios;
+    private final EspacioRepository repositorio;
 
-    public GestorEspacios() {
-        this.espacios = new ArrayList<>();
+    public GestorEspacios(EspacioRepository repositorio) {
+        this.repositorio = repositorio;
     }
 
     // Registrar un nuevo espacio.
@@ -24,37 +25,34 @@ public class GestorEspacios {
             );
         }
 
-        if (buscarPorId(espacio.getId()) != null) {
+        if (repositorio.existsById(espacio.getId())) {
             throw new IllegalArgumentException(
                     "Ya existe un espacio con ese ID."
             );
         }
 
-        espacios.add(espacio);
+        repositorio.save(espacio);
     }
 
     // Obtener todos los espacios.
     public List<Espacio> obtenerEspacios() {
-        return List.copyOf(espacios);
+        return repositorio.findAll(Sort.by("id"));
     }
 
-    // Buscar un espacio por su ID.
+    // Buscar un espacio por su ID (null si no existe).
     public Espacio buscarPorId(String id) {
 
         if (id == null) {
             return null;
         }
 
-        return espacios.stream()
-                .filter(espacio -> espacio.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+        return repositorio.findById(id).orElse(null);
     }
 
     // Obtener solamente los espacios disponibles.
     public List<Espacio> obtenerDisponibles() {
 
-        return espacios.stream()
+        return obtenerEspacios().stream()
                 .filter(Espacio::estaDisponible)
                 .toList();
     }
@@ -62,7 +60,7 @@ public class GestorEspacios {
     // Buscar espacios de un tipo determinado.
     public List<Espacio> buscarPorTipo(String tipo) {
 
-        return espacios.stream()
+        return obtenerEspacios().stream()
                 .filter(espacio -> espacio.esDelTipo(tipo))
                 .toList();
     }
@@ -70,14 +68,11 @@ public class GestorEspacios {
     // Eliminar un espacio.
     public boolean eliminarEspacio(String id) {
 
-        Espacio espacio = buscarPorId(id);
-
-        if (espacio == null) {
+        if (id == null || !repositorio.existsById(id)) {
             return false;
         }
 
-        espacios.remove(espacio);
+        repositorio.deleteById(id);
         return true;
     }
 }
-
