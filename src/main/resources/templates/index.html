@@ -105,6 +105,24 @@
         }
         .ok    { background-color: var(--verde); }
         .error { background-color: var(--rosa); border-left: 4px solid var(--rojo); }
+
+        .mensaje {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        .mensaje.ok {
+            background: #e6f4ea;
+            color: #1e6b34;
+            border: 1px solid #b7dfc2;
+        }
+        .mensaje.error {
+            background: #fdecea;
+            color: #a12a22;
+            border: 1px solid #f3b9b4;
+        }
+
     </style>
 </head>
 <body>
@@ -124,8 +142,13 @@
 
 <main>
 
-    <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
-    <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
+    <section id="reservar">
+        <h2>Nueva reserva</h2>
+
+        <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
+        <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
+
+        <form method="post" th:action="@{/reservar}">
 
     <!-- Sección 1: lista de espacios -->
     <section id="espacios">
