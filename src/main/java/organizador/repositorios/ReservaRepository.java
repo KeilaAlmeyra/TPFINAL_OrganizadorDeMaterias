@@ -9,6 +9,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+/**
+ * Acceso a la tabla RESERVA.
+ *
+ * JpaRepository<Reserva, Long>: trabaja con Reserva y su @Id es de tipo Long.
+ * Trae los métodos básicos (save, existsById, deleteById...) y además
+ * declaramos tres consultas propias.
+ */
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     // Todas las reservas, ordenadas por fecha y hora.

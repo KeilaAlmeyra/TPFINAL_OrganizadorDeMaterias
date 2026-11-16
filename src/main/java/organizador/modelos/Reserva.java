@@ -13,13 +13,15 @@ import java.time.LocalTime;
 /**
  * Representa la reserva de un espacio en una fecha y horario.
  */
+// @Entity; Indica q la clase se guarda en la base de datos
 @Entity
 public class Reserva {
 
-    @Id
+    @Id // Clave primaria
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //Muchas resercas pueden ser del mismo espacio y todas las reservas deben tener 'espacio',
     @ManyToOne(optional = false)
     private Espacio espacio;
 
@@ -28,6 +30,9 @@ public class Reserva {
     private LocalTime horaFin;
     private String reservadoPor;
 
+    /**
+     * El constructor vacío es para que JPA pueda usarlo
+     */
     protected Reserva() {}
 
     public Reserva(Espacio espacio, LocalDate fecha,
