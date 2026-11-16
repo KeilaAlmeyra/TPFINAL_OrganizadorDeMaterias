@@ -1,27 +1,32 @@
 package organizador.modelos;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 /**
  * Representa un espacio físico de la facultad.
  * Puede ser un aula común, un aula con computadoras
  * o un laboratorio.
  */
+@Entity
 public class Espacio {
 
-    private final String id;
-    private final String nombre;
-    private final int capacidadMaxima;
-    private final String tipoEspacio;
-    private final String ubicacion;
-    private final String estado;
+    @Id
+    private String id;
+    private String nombre;
+    private int capacidadMaxima;
+    private String tipoEspacio;
+    private String estado;
+
+    protected Espacio() {}
 
     public Espacio(String id, String nombre, int capacidadMaxima,
-                   String tipoEspacio, String ubicacion, String estado) {
+                   String tipoEspacio, String estado) {
 
         this.id = id;
         this.nombre = nombre;
         this.capacidadMaxima = capacidadMaxima;
         this.tipoEspacio = tipoEspacio;
-        this.ubicacion = ubicacion;
         this.estado = estado;
     }
 
@@ -41,9 +46,6 @@ public class Espacio {
         return tipoEspacio;
     }
 
-    public String getUbicacion() {
-        return ubicacion;
-    }
 
     public String getEstado() {
         return estado;
