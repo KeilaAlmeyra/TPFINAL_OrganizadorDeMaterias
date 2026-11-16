@@ -68,6 +68,11 @@ public class ReservaService {
                     "Ese espacio ya está reservado en ese horario.");
         }
 
+        if (horaInicio.getMinute() % 30 != 0 || horaFin.getMinute() % 30 != 0) {
+            throw new IllegalArgumentException(
+                    "Los horarios deben ser en punto o y media.");
+        }
+
         return reservaRepositorio.save(reserva);
     }
 
