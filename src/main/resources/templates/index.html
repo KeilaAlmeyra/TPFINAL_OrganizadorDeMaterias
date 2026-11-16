@@ -166,11 +166,29 @@
             <div class="fila">
                 <div>
                     <label for="horaInicio">Hora de inicio</label>
-                    <input type="time" id="horaInicio" name="horaInicio" min="08:00" max="21:30" step="1800" required>
+                    <select id="horaInicio" name="horaInicio" required>
+                        <option value="">Elegí una hora</option>
+                        <!-- De 08:00 a 21:30, cada 30 minutos -->
+                        <th:block th:each="h : ${#numbers.sequence(8, 21)}">
+                            <option th:value="${#numbers.formatInteger(h, 2) + ':00'}"
+                                    th:text="${#numbers.formatInteger(h, 2) + ':00'}"></option>
+                            <option th:value="${#numbers.formatInteger(h, 2) + ':30'}"
+                                    th:text="${#numbers.formatInteger(h, 2) + ':30'}"></option>
+                        </th:block>
+                    </select>
                 </div>
                 <div>
                     <label for="horaFin">Hora de fin</label>
-                    <input type="time" id="horaFin" name="horaFin" min="08:30" max="22:00" step="1800" required>
+                    <select id="horaFin" name="horaFin" required>
+                        <option value="">Elegí una hora</option>
+                        <!-- De 08:30 a 22:00, cada 30 minutos -->
+                        <th:block th:each="h : ${#numbers.sequence(8, 21)}">
+                            <option th:value="${#numbers.formatInteger(h, 2) + ':30'}"
+                                    th:text="${#numbers.formatInteger(h, 2) + ':30'}"></option>
+                            <option th:value="${#numbers.formatInteger(h + 1, 2) + ':00'}"
+                                    th:text="${#numbers.formatInteger(h + 1, 2) + ':00'}"></option>
+                        </th:block>
+                    </select>
                 </div>
             </div>
 
