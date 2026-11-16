@@ -1,16 +1,201 @@
-
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organizador de Materias</title>
+
+    <!-- Estilos: colores, tamaños y espacios de la página -->
+    <style>
+        :root {
+            --crema: #FFF7E6;
+            --rosa: #F7C8D3;
+            --rojo: #B46A72;
+            --verde: #A8B58A;
+            --celeste: #A9B7C6;
+            --azul: #2D3A47;
+        }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background-color: var(--crema);
+            color: var(--azul);
+            margin: 0;
+        }
+        header {
+            background-color: var(--azul);
+            color: var(--crema);
+            padding: 20px 32px;
+        }
+        header h1 { margin: 0 0 4px 0; font-size: 26px; }
+        header p  { margin: 0; opacity: 0.85; }
+        nav {
+            background-color: var(--celeste);
+            padding: 10px 32px;
+        }
+        nav a {
+            color: var(--azul);
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+        nav a:hover { text-decoration: underline; }
+        main {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+        section {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        }
+        h2 { margin-top: 0; color: var(--rojo); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid var(--celeste);
+        }
+        th { background-color: var(--rosa); }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        input, select, button {
+            font-family: inherit;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid var(--celeste);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        .fila { display: flex; gap: 16px; }
+        .fila > div { flex: 1; }
+        button {
+            background-color: var(--azul);
+            color: var(--crema);
+            border: none;
+            border-radius: 4px;
+            padding: 10px 18px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+        button:hover { background-color: var(--verde); color: var(--azul); }
+        button.cancelar {
+            background-color: var(--rosa);
+            color: var(--azul);
+            border: 1px solid var(--rojo);
+            margin: 0;
+            padding: 6px 12px;
+        }
+        button.cancelar:hover { background-color: var(--rojo); color: white; }
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 16px;
+        }
+        .ok    { background-color: var(--verde); }
+        .error { background-color: var(--rosa); border-left: 4px solid var(--rojo); }
+    </style>
 </head>
 <body>
 
-<h1>Organizador de Materias</h1>
+<!-- Encabezado -->
+<header>
+    <h1>Organizador de Espacios</h1>
+    <p>Sistema de organización y reserva de espacios de la facultad.</p>
+</header>
 
-<p>Sistema de organización y reserva de espacios de la facultad.</p>
+<!-- Menú: cada enlace lleva a una sección de la misma página -->
+<nav>
+    <a href="#espacios">Espacios</a>
+    <a href="#reservar">Reservar</a>
+    <a href="#mis-reservas">Mis reservas</a>
+</nav>
+
+<main>
+
+    <!-- Sección 1: lista de espacios -->
+    <section id="espacios">
+        <h2>Espacios</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Capacidad</th>
+            </tr>
+            </thead>
+            <tr th:each="espacio : ${espacios}">
+                <td th:text="${espacio.id}">AULA-1</td>
+                <td th:text="${espacio.nombre}">Aula 1</td>
+                <td th:text="${espacio.tipoEspacio}">aula</td>
+                <td th:text="${espacio.capacidadMaxima}">40</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- Sección 2: formulario para reservar -->
+    <section id="reservar">
+        <h2>Nueva reserva</h2>
+        <form>
+            <label for="espacio">Espacio</label>
+            <select id="espacio" name="espacio">
+                <option th:each="espacio : ${espacios}"
+                        th:value="${espacio.id}"
+                        th:text="|${espacio.nombre} (${espacio.capacidadMaxima} personas)|">
+                </option>
+            </select>
+
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" name="fecha">
+
+            <div class="fila">
+                <div>
+                    <label for="horaInicio">Hora de inicio</label>
+                    <input type="time" id="horaInicio" name="horaInicio" min="08:00" max="21:30" step="1800">
+                </div>
+                <div>
+                    <label for="horaFin">Hora de fin</label>
+                    <input type="time" id="horaFin" name="horaFin" min="08:30" max="22:00" step="1800">
+                </div>
+            </div>
+
+            <label for="usuario">Reservado por</label>
+            <input type="text" id="usuario" name="usuario" placeholder="Tu nombre">
+
+            <button type="submit">Reservar</button>
+        </form>
+
+    </section>
+
+    <!-- Sección 3: reservas de la persona -->
+    <section id="mis-reservas">
+        <h2>Mis reservas</h2>
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Espacio</th>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th></th>
+            </tr>
+            </thead>
+        </table>
+    </section>
+
+</main>
 
 </body>
 </html>
