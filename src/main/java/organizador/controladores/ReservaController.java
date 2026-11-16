@@ -39,11 +39,11 @@ public class ReservaController {
         try {
             reservaService.reservar(espacio, fecha, horaInicio, horaFin, usuario);
             mensajes.addFlashAttribute("ok", "¡Reserva guardada!");
+            return "redirect:/#reservar";
         } catch (IllegalArgumentException e) {
             mensajes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/#reservar";
         }
-
-        return "redirect:/#mis-reservas";
     }
 
     @PostMapping("/reservas/{id}/cancelar")
