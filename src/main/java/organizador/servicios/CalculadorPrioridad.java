@@ -2,9 +2,12 @@ package organizador.servicios;
 
 import organizador.modelos.Solicitud;
 import organizador.modelos.RegistroCumplimiento;
+import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+
+@Service
 
 /**
  * Calcula y ordena las solicitudes según

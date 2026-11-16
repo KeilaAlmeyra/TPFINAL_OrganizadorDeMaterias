@@ -49,12 +49,11 @@ class GestorAsignacionesTest {
 
     private Espacio crearAula() {
         return new Espacio(
-                "AULA01",
-                "Aula 101",
-                30,
-                "aula",
-                "Primer piso",
-                "disponible"
+            "AULA01",
+            "Aula 101",
+            30,
+            "aula",
+            "disponible"
         );
     }
 
@@ -108,12 +107,11 @@ class GestorAsignacionesTest {
         Solicitud solicitud = crearSolicitud("S1");
 
         Espacio aulaPequena = new Espacio(
-                "AULA02",
-                "Aula pequeña",
-                20,
-                "aula",
-                "Segundo piso",
-                "disponible"
+        "AULA02",
+        "Aula pequeña",
+        20,
+        "aula",
+        "disponible"
         );
 
         Espacio resultado = gestor.buscarEspacioCompatible(

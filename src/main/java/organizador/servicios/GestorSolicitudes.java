@@ -1,6 +1,9 @@
 package organizador.servicios;
 
 import organizador.modelos.Solicitud;
+import org.springframework.stereotype.Service;
+
+@Service
 
 public class GestorSolicitudes {
 

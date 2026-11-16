@@ -2,17 +2,20 @@ package organizador.servicios;
 
 import organizador.modelos.Asignacion;
 import organizador.modelos.RegistroCumplimiento;
+import organizador.repositorios.RegistroCumplimientoRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class GestorCumplimiento {
 
-    private final List<RegistroCumplimiento> registros;
+    private final RegistroCumplimientoRepository repositorio;
 
-    public GestorCumplimiento() {
-        this.registros = new ArrayList<>();
+    public GestorCumplimiento(
+            RegistroCumplimientoRepository repositorio) {
+        this.repositorio = repositorio;
     }
 
     public RegistroCumplimiento registrarResultado(
@@ -21,32 +24,25 @@ public class GestorCumplimiento {
             LocalDate fecha,
             String resultado) {
 
-        RegistroCumplimiento registro = new RegistroCumplimiento(
-                id,
-                asignacion,
-                fecha,
-                resultado
-        );
+        RegistroCumplimiento registro =
+                new RegistroCumplimiento(id, asignacion, fecha, resultado);
 
-        registros.add(registro);
-
-        return registro;
+        return repositorio.save(registro);
     }
 
     public List<RegistroCumplimiento> obtenerRegistros() {
-        return List.copyOf(registros);
+        return repositorio.findAll();
     }
 
     public List<RegistroCumplimiento> obtenerRegistrosDeProfesor(
             String idProfesor) {
 
-        return registros.stream()
-                .filter(registro ->
-                        registro.getAsignacion()
-                                .getSolicitud()
-                                .getProfesor()
-                                .getId()
-                                .equals(idProfesor))
+        return repositorio.findAll().stream()
+                .filter(registro -> registro.getAsignacion()
+                        .getSolicitud()
+                        .getProfesor()
+                        .getId()
+                        .equals(idProfesor))
                 .toList();
     }
 }

@@ -1,12 +1,11 @@
 package organizador.modelos;
 
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Registra qué ocurrió con una asignación
- * una vez que llega el momento de utilizar el espacio.
- */
+@Entity
+@Table(name = "registros_cumplimiento")
 public class RegistroCumplimiento {
 
     public static final String UTILIZADA = "UTILIZADA";
@@ -15,11 +14,21 @@ public class RegistroCumplimiento {
     public static final String INASISTENCIA = "INASISTENCIA";
     public static final String CANCELACION_JUSTIFICADA = "CANCELACION_JUSTIFICADA";
 
-    private final String id;
-    private final Asignacion asignacion;
-    private final LocalDate fecha;
-    private final String resultado;
-    private final LocalDateTime fechaRegistro;
+    @Id
+    private String id;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "asignacion_id", nullable = false)
+    private Asignacion asignacion;
+
+    private LocalDate fecha;
+
+    private String resultado;
+
+    private LocalDateTime fechaRegistro;
+
+    protected RegistroCumplimiento() {
+    }
 
     public RegistroCumplimiento(String id, Asignacion asignacion,
                                 LocalDate fecha, String resultado) {
@@ -63,10 +72,6 @@ public class RegistroCumplimiento {
         return fechaRegistro;
     }
 
-    /**
-     * Comprueba que el resultado pertenezca
-     * a las situaciones contempladas por el sistema.
-     */
     private boolean esResultadoValido(String resultado) {
         return UTILIZADA.equals(resultado)
                 || CANCELACION_ANTICIPADA.equals(resultado)
@@ -75,18 +80,11 @@ public class RegistroCumplimiento {
                 || CANCELACION_JUSTIFICADA.equals(resultado);
     }
 
-    /**
-     * Indica si el registro representa un incumplimiento.
-     */
     public boolean esIncumplimiento() {
         return CANCELACION_TARDIA.equals(resultado)
                 || INASISTENCIA.equals(resultado);
     }
 
-    /**
-     * Indica si el registro debe considerarse
-     * para calcular el cumplimiento.
-     */
     public boolean esEvaluable() {
         return !CANCELACION_ANTICIPADA.equals(resultado)
                 && !CANCELACION_JUSTIFICADA.equals(resultado);

@@ -3,9 +3,12 @@ package organizador.servicios;
 import organizador.modelos.Asignacion;
 import organizador.modelos.Espacio;
 import organizador.modelos.Solicitud;
+import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.util.List;
+
+@Service
 
 public class GestorAsignaciones {
 

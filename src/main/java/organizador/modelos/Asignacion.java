@@ -1,26 +1,56 @@
+
 package organizador.modelos;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
- * Representa el espacio y horario otorgados
- * a una solicitud que fue aprobada.
- */
+@Entity
+@Table(name = "asignaciones")
 public class Asignacion {
 
     public static final String ACTIVA = "ACTIVA";
     public static final String CANCELADA = "CANCELADA";
 
-    private final String id;
-    private final Solicitud solicitud;
-    private final Espacio espacio;
-    private final List<DayOfWeek> diasAsignados;
-    private final LocalTime horaInicioAsignada;
-    private final LocalTime horaFinAsignada;
+    @Id
+    private String id;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "solicitud_id", nullable = false)
+    private Solicitud solicitud;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "espacio_id", nullable = false)
+    private Espacio espacio;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "asignacion_dias",
+            joinColumns = @JoinColumn(name = "asignacion_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dia")
+    private List<DayOfWeek> diasAsignados;
+
+    private LocalTime horaInicioAsignada;
+    private LocalTime horaFinAsignada;
 
     private String estadoAsignacion;
+
+    // Constructor vacío requerido por JPA.
+    protected Asignacion() {
+    }
 
     public Asignacion(String id, Solicitud solicitud, Espacio espacio,
                       List<DayOfWeek> diasAsignados,
@@ -76,24 +106,14 @@ public class Asignacion {
         return estadoAsignacion;
     }
 
-    /**
-     * Comprueba si la asignación está activa.
-     */
     public boolean estaActiva() {
         return estadoAsignacion.equals(ACTIVA);
     }
 
-    /**
-     * Cancela una asignación.
-     */
     public void cancelar() {
         estadoAsignacion = CANCELADA;
     }
 
-    /**
-     * Comprueba si dos asignaciones utilizan
-     * el mismo espacio, día y horario superpuesto.
-     */
     public boolean seSuperponeCon(Asignacion otra) {
 
         if (otra == null || !estaActiva() || !otra.estaActiva()) {

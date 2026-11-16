@@ -1,15 +1,28 @@
+
 package organizador.modelos;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * Representa a una persona que utiliza el sistema.
  * Puede ser un profesor o un administrador.
  */
+@Entity
+@Table(name = "usuarios")
 public class Usuario {
 
-    private final String id;
-    private final String nombre;
-    private final String correo;
-    private final String rol;
+    @Id
+    private String id;
+
+    private String nombre;
+    private String correo;
+    private String rol;
+
+    // Constructor vacío requerido por JPA.
+    protected Usuario() {
+    }
 
     public Usuario(String id, String nombre, String correo, String rol) {
         this.id = id;

@@ -1,16 +1,29 @@
+
 package organizador.modelos;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * Representa una materia de una carrera universitaria.
  */
+@Entity
+@Table(name = "materias")
 public class Materia {
 
-    private final String id;
-    private final String nombre;
-    private final int cargaHoraria;
-    private final boolean troncal;
-    private final int anioCarrera;
-    private final String tipoEspacioFrecuente;
+    @Id
+    private String id;
+
+    private String nombre;
+    private int cargaHoraria;
+    private boolean troncal;
+    private int anioCarrera;
+    private String tipoEspacioFrecuente;
+
+    // Constructor vacío requerido por JPA.
+    protected Materia() {
+    }
 
     public Materia(String id, String nombre, int cargaHoraria,
                    boolean troncal, int anioCarrera,

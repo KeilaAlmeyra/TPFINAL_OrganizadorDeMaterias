@@ -1,4 +1,16 @@
+
 package organizador.modelos;
+
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -12,6 +24,8 @@ import java.util.List;
  * El espacio otorgado se registra posteriormente
  * mediante la clase Asignacion.
  */
+@Entity
+@Table(name = "solicitudes")
 public class Solicitud {
 
     // Estados posibles de una solicitud.
@@ -26,17 +40,38 @@ public class Solicitud {
     public static final String CLASE_OBLIGATORIA = "CLASE_OBLIGATORIA";
     public static final String CLASE_REGULAR = "CLASE_REGULAR";
 
-    private final String id;
-    private final Usuario profesor;
-    private final Materia materia;
-    private final int cantidadAlumnos;
-    private final List<DayOfWeek> dias;
-    private final LocalTime horaInicio;
-    private final LocalTime horaFin;
-    private final String tipoActividad;
+    @Id
+    private String id;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "profesor_id", nullable = false)
+    private Usuario profesor;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "materia_id", nullable = false)
+    private Materia materia;
+
+    private int cantidadAlumnos;
+
+    @ElementCollection
+    @CollectionTable(
+            name = "solicitud_dias",
+            joinColumns = @JoinColumn(name = "solicitud_id")
+    )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dia")
+    private List<DayOfWeek> dias;
+
+    private LocalTime horaInicio;
+    private LocalTime horaFin;
+    private String tipoActividad;
 
     private String estadoSolicitud;
     private double puntajePrioridad;
+
+    // Constructor vacío requerido por JPA.
+    protected Solicitud() {
+    }
 
     public Solicitud(String id, Usuario profesor, Materia materia,
                      int cantidadAlumnos,
