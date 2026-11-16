@@ -3,6 +3,8 @@ package organizador.controladores;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import organizador.servicios.GestorEspacios;
+import org.springframework.ui.Model;
 
 /**
  * Controlador encargado de gestionar la página de inicio.
@@ -13,9 +15,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class InicioController {
 
-    // Atiende las visitas a la dirección principal del sistema.
+    private final GestorEspacios gestorEspacios;
+
+    public InicioController(GestorEspacios gestorEspacios) {
+        this.gestorEspacios = gestorEspacios;
+    }
+
     @GetMapping("/")
-    public String inicio() {
+    public String inicio(Model model) {
+        model.addAttribute("espacios", gestorEspacios.obtenerEspacios());
         return "index";
     }
 }
