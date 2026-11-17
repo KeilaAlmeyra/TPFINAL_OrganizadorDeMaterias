@@ -1,49 +1,88 @@
+
 package organizador.modelos;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import java.time.LocalDate;
 
-/**
- * Representa la configuración general del sistema.
- * Permite controlar el período académico y la etapa
- * en la que se encuentra la organización de espacios.
- */
+@Entity
 public class Configuracion {
 
-    private final String id;
-    private final LocalDate fechaInicio;
-    private final LocalDate fechaFin;
-    private final boolean enPlanificacion;
+    @Id
+    private String id;
 
-    public Configuracion(String id, LocalDate fechaInicio,
-                         LocalDate fechaFin, boolean enPlanificacion) {
+    private LocalDate fechaInicioRecepcion;
+    private LocalDate fechaFinRecepcion;
+
+    private LocalDate fechaInicioCursada;
+    private LocalDate fechaFinCursada;
+
+    // Constructor requerido por JPA
+    protected Configuracion() {
+    }
+
+    public Configuracion(String id,
+                         LocalDate fechaInicioRecepcion,
+                         LocalDate fechaFinRecepcion,
+                         LocalDate fechaInicioCursada,
+                         LocalDate fechaFinCursada) {
+
+        if (id == null || id.isBlank()) {
+            throw new IllegalArgumentException("El ID es obligatorio");
+        }
+
+        if (fechaInicioRecepcion == null
+                || fechaFinRecepcion == null
+                || fechaInicioCursada == null
+                || fechaFinCursada == null) {
+            throw new IllegalArgumentException("Todas las fechas son obligatorias");
+        }
+
+        if (fechaFinRecepcion.isBefore(fechaInicioRecepcion)) {
+            throw new IllegalArgumentException(
+                    "La fecha de cierre no puede ser anterior al inicio de recepción");
+        }
+
+        if (fechaFinCursada.isBefore(fechaInicioCursada)) {
+            throw new IllegalArgumentException(
+                    "La fecha de fin de cursada no puede ser anterior al inicio");
+        }
 
         this.id = id;
-        this.fechaInicio = fechaInicio;
-        this.fechaFin = fechaFin;
-        this.enPlanificacion = enPlanificacion;
+        this.fechaInicioRecepcion = fechaInicioRecepcion;
+        this.fechaFinRecepcion = fechaFinRecepcion;
+        this.fechaInicioCursada = fechaInicioCursada;
+        this.fechaFinCursada = fechaFinCursada;
     }
 
     public String getId() {
         return id;
     }
 
-    public LocalDate getFechaInicio() {
-        return fechaInicio;
+    public LocalDate getFechaInicioRecepcion() {
+        return fechaInicioRecepcion;
     }
 
-    public LocalDate getFechaFin() {
-        return fechaFin;
+    public LocalDate getFechaFinRecepcion() {
+        return fechaFinRecepcion;
     }
 
-    public boolean isEnPlanificacion() {
-        return enPlanificacion;
+    public LocalDate getFechaInicioCursada() {
+        return fechaInicioCursada;
     }
 
-    /**
-     * Comprueba si una fecha pertenece al período configurado.
-     */
-    public boolean estaDentroDelPeriodo(LocalDate fecha) {
-        return !fecha.isBefore(fechaInicio)
-                && !fecha.isAfter(fechaFin);
+    public LocalDate getFechaFinCursada() {
+        return fechaFinCursada;
+    }
+
+    public boolean estaEnRecepcion(LocalDate fecha) {
+        return !fecha.isBefore(fechaInicioRecepcion)
+                && !fecha.isAfter(fechaFinRecepcion);
+    }
+
+    public boolean estaEnCursada(LocalDate fecha) {
+        return !fecha.isBefore(fechaInicioCursada)
+                && !fecha.isAfter(fechaFinCursada);
     }
 }

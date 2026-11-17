@@ -1,0 +1,437 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Asignación de espacios</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #fff7e6;
+            color: #2d3a47;
+            margin: 0;
+        }
+
+        header {
+            background: #2d3a47;
+            color: white;
+            padding: 20px;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin: 12px 0 4px;
+        }
+
+        input, select {
+            padding: 8px;
+            max-width: 100%;
+        }
+
+        select {
+            width: 100%;
+        }
+
+        button {
+            padding: 10px 16px;
+            background: #2d3a47;
+            color: white;
+            border: 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #43566a;
+        }
+
+        .dias label {
+            display: inline-block;
+            margin-right: 14px;
+        }
+
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .ok {
+            background: #e6f4ea;
+        }
+
+        .error {
+            background: #fdecea;
+        }
+
+        .tabla {
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            padding: 9px;
+        }
+
+        th {
+            background: #f7c8d3;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Solicitud de asignación de aula</h1>
+    <p>
+        Bienvenido/a,
+        <strong th:text="${usuario.nombre}"></strong>
+    </p>
+    <p>
+        Completá esta solicitud para indicar las necesidades de espacio
+        de tu materia durante el cuatrimestre. El sistema evaluará
+        la disponibilidad y las prioridades para determinar la asignación.
+    </p>
+    <a th:href="@{/}" style="color:white">
+        Volver a la página inicial
+    </a>
+</header>
+
+<main>
+
+    <p class="mensaje ok" th:if="${ok}" th:text="${ok}"></p>
+    <p class="mensaje error" th:if="${error}" th:text="${error}"></p>
+
+    <!-- ACCIÓN EXCLUSIVA DEL ADMINISTRADOR -->
+    <section th:if="${esAdministrador}">
+        <h2>1. Preparar datos de ejemplo</h2>
+
+        <p>
+            Agrega dos profesores, dos materias y un aula de 30 lugares,
+            sin modificar registros que ya existan.
+        </p>
+
+        <form th:action="@{/prueba-asignaciones/cargar-datos}"
+              method="post">
+            <button type="submit">Cargar datos de prueba</button>
+        </form>
+    </section>
+
+    <!-- PROFESOR Y ADMINISTRADOR -->
+    <section>
+        <h2>2. Presentar solicitud de espacio</h2>
+
+        <form th:action="@{/prueba-asignaciones/solicitar}"
+              method="post">
+
+            <!-- El administrador puede elegir un profesor -->
+            <div th:if="${esAdministrador}">
+                <label for="profesorId">Profesor</label>
+
+                <select id="profesorId" name="profesorId" required>
+                    <option value="">Seleccionar profesor</option>
+
+                    <option th:each="p : ${profesores}"
+                            th:value="${p.id}"
+                            th:text="${p.nombre}">
+                    </option>
+                </select>
+            </div>
+
+            <!-- El profesor utiliza automáticamente su propia cuenta -->
+            <div th:unless="${esAdministrador}">
+                <label>Profesor</label>
+                <p>
+                    <strong th:text="${usuario.nombre}"></strong>
+                </p>
+                <p>
+                    La solicitud se registrará a nombre de tu cuenta.
+                </p>
+            </div>
+
+            <label for="materiaId">Materia</label>
+
+            <select id="materiaId" name="materiaId" required>
+                <option value="">Seleccionar materia</option>
+
+                <option th:each="m : ${materias}"
+                        th:value="${m.id}"
+                        th:text="|${m.nombre} (año ${m.anioCarrera})|">
+                </option>
+            </select>
+
+            <label for="cantidadAlumnos">Cantidad de alumnos</label>
+
+            <input id="cantidadAlumnos"
+                   name="cantidadAlumnos"
+                   type="number"
+                   min="1"
+                   value="20"
+                   required>
+
+            <p>Días solicitados</p>
+
+            <div class="dias">
+                <label>
+                    <input type="checkbox" name="dias" value="MONDAY">
+                    Lunes
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="TUESDAY">
+                    Martes
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="WEDNESDAY">
+                    Miércoles
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="THURSDAY">
+                    Jueves
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="FRIDAY">
+                    Viernes
+                </label>
+            </div>
+
+            <label for="horaInicio">Hora de inicio</label>
+
+            <input id="horaInicio"
+                   name="horaInicio"
+                   type="time"
+                   value="14:00"
+                   required>
+
+            <label for="horaFin">Hora de fin</label>
+
+            <input id="horaFin"
+                   name="horaFin"
+                   type="time"
+                   value="16:00"
+                   required>
+
+            <label for="tipoActividad">Actividad</label>
+
+            <select id="tipoActividad" name="tipoActividad" required>
+                <option th:each="a : ${actividades}"
+                        th:value="${a}"
+                        th:text="${#strings.replace(a, '_', ' ')}">
+                </option>
+            </select>
+
+            <p>
+                <button type="submit">Enviar solicitud</button>
+            </p>
+        </form>
+    </section>
+
+    <!-- ACCIÓN EXCLUSIVA DEL ADMINISTRADOR -->
+    <section th:if="${esAdministrador}">
+        <h2>3. Procesar solicitudes pendientes</h2>
+
+        <p>
+            El sistema compara el año de carrera y el puntaje secundario,
+            después busca espacios compatibles que no estén ocupados.
+        </p>
+
+        <form th:action="@{/prueba-asignaciones/procesar}"
+              method="post">
+            <button type="submit">
+                Procesar todas las solicitudes pendientes
+            </button>
+        </form>
+    </section>
+
+    <!-- ACCIÓN EXCLUSIVA DEL ADMINISTRADOR -->
+    <section th:if="${esAdministrador}">
+        <h2>4. Reintentar solicitudes pendientes</h2>
+
+        <p>
+            Vuelve a buscar espacios disponibles para las solicitudes que
+            todavía no tienen un espacio asignado. Si no encuentra uno
+            compatible, la solicitud permanece pendiente.
+        </p>
+
+        <form th:action="@{/prueba-asignaciones/reintentar}"
+              method="post">
+            <button type="submit">
+                Reintentar asignaciones pendientes
+            </button>
+        </form>
+    </section>
+
+
+    <!-- ACCIÓN EXCLUSIVA DEL ADMINISTRADOR -->
+    <section th:if="${esAdministrador}">
+        <h2>5. Proponer una asignación alternativa</h2>
+
+        <p>
+            Si una solicitud continúa pendiente, el administrador puede
+            proponer otro espacio, otros días o un horario diferente.
+            La solicitud original no se modifica.
+        </p>
+
+        <div th:if="${#lists.isEmpty(solicitudesPendientes)}">
+            <p>No hay solicitudes pendientes para proponer alternativas.</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(espaciosDisponibles)}">
+            <p>No hay espacios disponibles para realizar propuestas.</p>
+        </div>
+
+        <form th:if="${not #lists.isEmpty(solicitudesPendientes) and not #lists.isEmpty(espaciosDisponibles)}"
+              th:action="@{/propuestas/crear}"
+              method="post">
+
+            <label for="solicitudId">Solicitud pendiente</label>
+
+            <select id="solicitudId" name="solicitudId" required>
+                <option value="">Seleccionar solicitud</option>
+
+                <option th:each="s : ${solicitudesPendientes}"
+                        th:value="${s.id}"
+                        th:text="|${s.profesor} - ${s.materia} (original: ${s.dias}, ${s.inicio} a ${s.fin})|">
+                </option>
+            </select>
+
+            <label for="espacioId">Espacio alternativo</label>
+
+            <select id="espacioId" name="espacioId" required>
+                <option value="">Seleccionar espacio</option>
+
+                <option th:each="e : ${espaciosDisponibles}"
+                        th:value="${e.id}"
+                        th:text="|${e.nombre} - ${e.capacidadMaxima} lugares (${e.tipoEspacio})|">
+                </option>
+            </select>
+
+            <p>Días propuestos</p>
+
+            <div class="dias">
+                <label>
+                    <input type="checkbox" name="dias" value="MONDAY">
+                    Lunes
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="TUESDAY">
+                    Martes
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="WEDNESDAY">
+                    Miércoles
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="THURSDAY">
+                    Jueves
+                </label>
+
+                <label>
+                    <input type="checkbox" name="dias" value="FRIDAY">
+                    Viernes
+                </label>
+            </div>
+
+            <label for="horaInicioPropuesta">Hora de inicio propuesta</label>
+
+            <input id="horaInicioPropuesta"
+                   name="horaInicio"
+                   type="time"
+                   required>
+
+            <label for="horaFinPropuesta">Hora de fin propuesta</label>
+
+            <input id="horaFinPropuesta"
+                   name="horaFin"
+                   type="time"
+                   required>
+
+            <p>
+                <button type="submit">
+                    Crear propuesta alternativa
+                </button>
+            </p>
+        </form>
+    </section>
+
+
+    <!-- RESULTADOS PARA AMBOS ROLES -->
+    <section>
+        <h2>6. Resultado de las solicitudes</h2>
+
+        <p th:unless="${esAdministrador}">
+            Aquí podés consultar el estado de tus solicitudes y los
+            espacios que fueron asignados.
+        </p>
+
+        <p th:if="${esAdministrador}">
+            Aquí podés consultar todas las solicitudes presentadas.
+        </p>
+
+        <div class="tabla">
+            <table>
+                <thead>
+                <tr>
+                    <th>Profesor</th>
+                    <th>Materia</th>
+                    <th>Año</th>
+                    <th>Días</th>
+                    <th>Horario</th>
+                    <th>Puntaje</th>
+                    <th>Estado</th>
+                    <th>Espacio asignado</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="s : ${solicitudes}">
+                    <td th:text="${s.profesor}"></td>
+                    <td th:text="${s.materia}"></td>
+                    <td th:text="${s.anio}"></td>
+                    <td th:text="${s.dias}"></td>
+                    <td th:text="|${s.inicio} - ${s.fin}|"></td>
+                    <td th:text="${s.puntaje}"></td>
+                    <td th:text="${s.estado}"></td>
+                    <td th:text="${s.aula}"></td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(solicitudes)}">
+                    <td colspan="8">
+                        Todavía no hay solicitudes.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+</body>
+</html>
+

@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Administración de materias</title>
+
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background: #FFF7E6;
+            color: #2D3A47;
+            margin: 0;
+        }
+
+        header {
+            background: #2D3A47;
+            color: #FFF7E6;
+            padding: 20px 32px;
+        }
+
+        header a {
+            color: white;
+        }
+
+        main {
+            max-width: 1050px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            color: #B46A72;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-top: 4px;
+        }
+
+        button {
+            background: #2D3A47;
+            color: white;
+            border: 0;
+            border-radius: 4px;
+            padding: 9px 14px;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        .secundario {
+            background: #A9B7C6;
+            color: #2D3A47;
+        }
+
+        .eliminar {
+            background: #B46A72;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #A9B7C6;
+        }
+
+        th {
+            background: #F7C8D3;
+        }
+
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .ok {
+            background: #e6f4ea;
+        }
+
+        .error {
+            background: #fdecea;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .acciones form {
+            margin: 0;
+        }
+
+        .checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .checkbox input {
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Administración de materias</h1>
+    <a th:href="@{/}">Volver al inicio</a>
+</header>
+
+<main>
+
+    <p class="mensaje ok" th:if="${ok}" th:text="${ok}"></p>
+    <p class="mensaje error" th:if="${error}" th:text="${error}"></p>
+
+    <section>
+
+        <h2 th:text="${materiaEditar != null
+                ? 'Modificar materia'
+                : 'Registrar nueva materia'}">
+            Registrar nueva materia
+        </h2>
+
+        <form method="post" th:action="@{/materias/guardar}">
+
+            <label for="id">Código identificador</label>
+            <input id="id"
+                   name="id"
+                   type="text"
+                   required
+                   th:value="${materiaEditar != null
+                       ? materiaEditar.id : ''}"
+                   th:readonly="${materiaEditar != null}">
+
+            <label for="nombre">Nombre</label>
+            <input id="nombre"
+                   name="nombre"
+                   type="text"
+                   required
+                   th:value="${materiaEditar != null
+                       ? materiaEditar.nombre : ''}">
+
+            <label for="cargaHoraria">Carga horaria semanal</label>
+            <input id="cargaHoraria"
+                   name="cargaHoraria"
+                   type="number"
+                   min="1"
+                   required
+                   th:value="${materiaEditar != null
+                       ? materiaEditar.cargaHoraria : ''}">
+
+            <label for="anioCarrera">Año de carrera</label>
+            <input id="anioCarrera"
+                   name="anioCarrera"
+                   type="number"
+                   min="1"
+                   required
+                   th:value="${materiaEditar != null
+                       ? materiaEditar.anioCarrera : ''}">
+
+            <label for="tipoEspacioFrecuente">
+                Tipo de espacio frecuente
+            </label>
+
+            <select id="tipoEspacioFrecuente"
+                    name="tipoEspacioFrecuente"
+                    required>
+
+                <option value="">Seleccionar tipo</option>
+
+                <option value="aula"
+                        th:selected="${materiaEditar != null
+                            and materiaEditar.tipoEspacioFrecuente == 'aula'}">
+                    Aula común
+                </option>
+
+                <option value="computadoras"
+                        th:selected="${materiaEditar != null
+                            and materiaEditar.tipoEspacioFrecuente == 'computadoras'}">
+                    Aula con computadoras
+                </option>
+
+                <option value="laboratorio"
+                        th:selected="${materiaEditar != null
+                            and materiaEditar.tipoEspacioFrecuente == 'laboratorio'}">
+                    Laboratorio
+                </option>
+
+            </select>
+
+            <div class="checkbox">
+                <input id="troncal"
+                       name="troncal"
+                       type="checkbox"
+                       value="true"
+                       th:checked="${materiaEditar != null
+                           and materiaEditar.troncal}">
+                <label for="troncal" style="margin:0">
+                    Materia troncal
+                </label>
+            </div>
+
+            <button type="submit"
+                    th:text="${materiaEditar != null
+                        ? 'Guardar cambios' : 'Registrar materia'}">
+                Registrar materia
+            </button>
+
+            <a th:if="${materiaEditar != null}"
+               th:href="@{/materias}">
+                <button type="button" class="secundario">
+                    Cancelar edición
+                </button>
+            </a>
+
+        </form>
+
+    </section>
+
+    <section>
+
+        <h2>Materias registradas</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Carga horaria</th>
+                <th>Año</th>
+                <th>Troncal</th>
+                <th>Tipo de espacio</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            <tr th:each="materia : ${materias}">
+
+                <td th:text="${materia.id}"></td>
+                <td th:text="${materia.nombre}"></td>
+                <td th:text="${materia.cargaHoraria}"></td>
+                <td th:text="${materia.anioCarrera}"></td>
+
+                <td th:text="${materia.troncal ? 'Sí' : 'No'}"></td>
+
+                <td th:text="${materia.tipoEspacioFrecuente}"></td>
+
+                <td>
+                    <div class="acciones">
+
+                        <a th:href="@{/materias(editar=${materia.id})}">
+                            <button type="button">
+                                Editar
+                            </button>
+                        </a>
+
+                        <form method="post"
+                              th:action="@{/materias/eliminar/{id}(id=${materia.id})}"
+                              onsubmit="return confirm('¿Seguro que desea eliminar esta materia?');">
+
+                            <button type="submit" class="eliminar">
+                                Eliminar
+                            </button>
+
+                        </form>
+
+                    </div>
+                </td>
+
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(materias)}">
+                <td colspan="7">
+                    Todavía no hay materias registradas.
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+
+    </section>
+
+</main>
+
+</body>
+</html>

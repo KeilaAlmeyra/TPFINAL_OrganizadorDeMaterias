@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solicitudes pendientes</title>
+
+    <style>
+        :root {
+            --crema: #FFF7E6;
+            --rosa: #F7C8D3;
+            --rojo: #B46A72;
+            --verde: #A8B58A;
+            --celeste: #A9B7C6;
+            --azul: #2D3A47;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background: var(--crema);
+            color: var(--azul);
+            margin: 0;
+        }
+
+        header {
+            background: var(--azul);
+            color: var(--crema);
+            padding: 20px 32px;
+        }
+
+        header a {
+            color: var(--crema);
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+        }
+
+        h2 {
+            color: var(--rojo);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--celeste);
+        }
+
+        th {
+            background: var(--rosa);
+        }
+
+        button {
+            border: 0;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            margin: 3px;
+        }
+
+        .aprobar {
+            background: var(--verde);
+            color: var(--azul);
+        }
+
+        .rechazar {
+            background: var(--rojo);
+            color: white;
+        }
+
+        input {
+            width: 100%;
+            padding: 7px;
+            box-sizing: border-box;
+            border: 1px solid var(--celeste);
+            border-radius: 4px;
+        }
+
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .ok {
+            background: #e6f4ea;
+        }
+
+        .error {
+            background: #fdecea;
+        }
+
+        .vacio {
+            text-align: center;
+            padding: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Solicitudes pendientes</h1>
+    <p>Revisá las solicitudes de reserva que necesitan aprobación.</p>
+    <a th:href="@{/}">Volver al inicio</a>
+</header>
+
+<main>
+    <section>
+
+        <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
+        <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
+
+        <h2>Solicitudes para revisar</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Espacio</th>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th>Solicitante</th>
+                <th>Motivo</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="solicitud : ${solicitudes}">
+                <td th:text="|R-${solicitud.id}|"></td>
+
+                <td th:text="${solicitud.espacio.nombre}"></td>
+
+                <td th:text="${#temporals.format(solicitud.fecha, 'dd/MM/yyyy')}"></td>
+
+                <td th:text="|${#temporals.format(solicitud.horaInicio, 'HH:mm')} - ${#temporals.format(solicitud.horaFin, 'HH:mm')}|"></td>
+
+                <td th:text="${solicitud.reservadoPor}"></td>
+
+                <td th:text="${solicitud.motivo}"></td>
+
+                <td>
+                    <form method="post"
+                          th:action="@{/reservas/{id}/aprobar(id=${solicitud.id})}">
+                        <button class="aprobar" type="submit">
+                            Aprobar
+                        </button>
+                    </form>
+
+                    <form method="post"
+                          th:action="@{/reservas/{id}/rechazar(id=${solicitud.id})}">
+                        <input type="text"
+                               name="motivo"
+                               placeholder="Motivo del rechazo"
+                               required>
+
+                        <button class="rechazar" type="submit">
+                            Rechazar
+                        </button>
+                    </form>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(solicitudes)}">
+                <td colspan="7" class="vacio">
+                    No hay solicitudes pendientes.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </section>
+</main>
+
+</body>
+</html>

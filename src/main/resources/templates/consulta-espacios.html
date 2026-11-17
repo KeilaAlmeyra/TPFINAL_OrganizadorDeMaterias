@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Consultar espacios</title>
+
+    <style>
+        :root {
+            --crema: #FFF7E6;
+            --rosa: #F7C8D3;
+            --rojo: #B46A72;
+            --celeste: #A9B7C6;
+            --azul: #2D3A47;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background: var(--crema);
+            color: var(--azul);
+            margin: 0;
+        }
+
+        header {
+            background: var(--azul);
+            color: var(--crema);
+            padding: 20px 32px;
+        }
+
+        header a {
+            color: var(--crema);
+        }
+
+        main {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+        }
+
+        h2 {
+            color: var(--rojo);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--celeste);
+        }
+
+        th {
+            background: var(--rosa);
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Consultar espacios</h1>
+    <p>Consultá las aulas y los espacios disponibles de la facultad.</p>
+    <a th:href="@{/}">Volver al inicio</a>
+</header>
+
+<main>
+    <section>
+        <h2>Espacios registrados</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Capacidad</th>
+                <th>Estado</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="espacio : ${espacios}">
+                <td th:text="${espacio.id}"></td>
+                <td th:text="${espacio.nombre}"></td>
+                <td th:text="${espacio.tipoEspacio}"></td>
+                <td th:text="${espacio.capacidadMaxima}"></td>
+                <td th:text="${espacio.estado}"></td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(espacios)}">
+                <td colspan="5">
+                    Todavía no hay espacios registrados.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+</body>
+</html>

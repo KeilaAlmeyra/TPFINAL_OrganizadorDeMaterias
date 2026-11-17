@@ -1,0 +1,301 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mis asignaciones</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #FFF7E6;
+            color: #2D3A47;
+        }
+
+        .contenedor {
+            max-width: 1150px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        .descripcion {
+            color: #65717D;
+            margin-bottom: 25px;
+        }
+
+        .tabla-contenedor {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-x: auto;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #E8E0CF;
+        }
+
+        th {
+            background: #F7C8D3;
+            color: #2D3A47;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .estado {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .activa {
+            background: #DDEBD5;
+            color: #355B32;
+        }
+
+        .cancelada {
+            background: #F7C8D3;
+            color: #8B3947;
+        }
+
+        .vacio {
+            text-align: center;
+            padding: 35px;
+            color: #65717D;
+        }
+
+        .volver {
+            display: inline-block;
+            margin-top: 22px;
+            padding: 11px 18px;
+            background: #A9B7C6;
+            color: #2D3A47;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .volver:hover {
+            background: #91A2B4;
+        }
+
+                .propuesta {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .propuesta h3 {
+            margin-top: 0;
+        }
+
+        .propuesta p {
+            margin: 8px 0;
+        }
+
+        .estado-pendiente {
+            background: #FFF0CC;
+            color: #795B16;
+        }
+
+        .estado-aceptada {
+            background: #DDEBD5;
+            color: #355B32;
+        }
+
+        .estado-rechazada {
+            background: #F7C8D3;
+            color: #8B3947;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            .tabla-contenedor {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="contenedor">
+
+    <h1 th:text="${esAdministrador ? 'Asignaciones de espacios' : 'Mis asignaciones'}">
+        Mis asignaciones
+    </h1>
+
+    <p th:if="${ok}"
+       class="estado estado-aceptada"
+       th:text="${ok}">
+    </p>
+
+    <p th:if="${error}"
+       class="estado estado-rechazada"
+       th:text="${error}">
+    </p>
+
+    <p class="descripcion"
+       th:text="${esAdministrador
+            ? 'Consulta de todas las asignaciones generadas por el sistema.'
+            : 'Estos son los espacios asignados a tus materias para el cuatrimestre.'}">
+        Consulta de asignaciones.
+    </p>
+
+    <!-- PROPUESTAS ALTERNATIVAS PARA EL PROFESOR -->
+    <section th:if="${not esAdministrador}">
+        <h2>Propuestas alternativas</h2>
+
+        <p>
+            Aquí podés consultar las alternativas de espacio,
+            días y horarios que te propone el administrador.
+        </p>
+
+        <div th:if="${#lists.isEmpty(propuestas)}" class="vacio">
+            No tenés propuestas alternativas por el momento.
+        </div>
+
+        <article class="propuesta" th:each="p : ${propuestas}">
+
+            <h3 th:text="${p.solicitud.materia.nombre}">
+                Materia
+            </h3>
+
+            <p>
+                <strong>Espacio propuesto:</strong>
+                <span th:text="${p.espacio.nombre}"></span>
+            </p>
+
+            <p>
+                <strong>Días propuestos:</strong>
+                <span th:text="${p.diasPropuestos}"></span>
+            </p>
+
+            <p>
+                <strong>Horario:</strong>
+                <span th:text="${p.horaInicio}"></span>
+                -
+                <span th:text="${p.horaFin}"></span>
+            </p>
+
+            <p>
+                <strong>Estado:</strong>
+
+                <span class="estado"
+                      th:classappend="| estado-${#strings.toLowerCase(p.estado)}|"
+                      th:text="${p.estado}">
+                </span>
+            </p>
+
+            <!-- RESPUESTA DEL PROFESOR -->
+            <div th:if="${p.estado == 'PENDIENTE'}">
+
+                <form th:action="@{/propuestas/{id}/aceptar(id=${p.id})}"
+                      method="post"
+                      style="display:inline-block; margin-right:8px;">
+
+                    <button type="submit">
+                        Aceptar propuesta
+                    </button>
+                </form>
+
+                <form th:action="@{/propuestas/{id}/rechazar(id=${p.id})}"
+                      method="post"
+                      style="display:inline-block;">
+
+                    <button type="submit"
+                            style="background:#B46A72;">
+                        Rechazar propuesta
+                    </button>
+                </form>
+
+            </div>
+
+        </article>
+    </section>
+
+    <div class="tabla-contenedor">
+
+        <table>
+            <thead>
+            <tr>
+                <th th:if="${esAdministrador}">Profesor</th>
+                <th>Materia</th>
+                <th>Aula</th>
+                <th>Días</th>
+                <th>Horario</th>
+                <th>Estado</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="asignacion : ${asignaciones}">
+
+                <td th:if="${esAdministrador}"
+                    th:text="${asignacion.profesor}">
+                    Profesor
+                </td>
+
+                <td th:text="${asignacion.materia}">Materia</td>
+
+                <td th:text="${asignacion.aula}">Aula</td>
+
+                <td th:text="${asignacion.dias}">Días</td>
+
+                <td>
+                    <span th:text="${asignacion.inicio}">08:00</span>
+                    -
+                    <span th:text="${asignacion.fin}">10:00</span>
+                </td>
+
+                <td>
+                    <span class="estado"
+                          th:classappend="${#strings.toLowerCase(asignacion.estado)}"
+                          th:text="${asignacion.estado}">
+                        ACTIVA
+                    </span>
+                </td>
+
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(asignaciones)}">
+                <td colspan="6" class="vacio">
+                    Todavía no hay asignaciones registradas.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+    <a th:href="@{/}" class="volver">Volver al inicio</a>
+
+</div>
+</body>
+</html>

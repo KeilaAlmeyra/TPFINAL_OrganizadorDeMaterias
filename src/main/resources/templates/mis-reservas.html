@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mis reservas</title>
+
+    <style>
+        :root {
+            --crema: #FFF7E6;
+            --rosa: #F7C8D3;
+            --rojo: #B46A72;
+            --verde: #A8B58A;
+            --celeste: #A9B7C6;
+            --azul: #2D3A47;
+        }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background: var(--crema);
+            color: var(--azul);
+            margin: 0;
+        }
+
+        header {
+            background: var(--azul);
+            color: var(--crema);
+            padding: 20px 32px;
+        }
+
+        header a {
+            color: var(--crema);
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+        }
+
+        h2 {
+            color: var(--rojo);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--celeste);
+        }
+
+        th {
+            background: var(--rosa);
+        }
+
+        button {
+            background: var(--rojo);
+            color: white;
+            border: 0;
+            border-radius: 4px;
+            padding: 7px 12px;
+            cursor: pointer;
+        }
+
+        .estado {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .confirmada {
+            background: #e6f4ea;
+            color: #1e6b34;
+        }
+
+        .pendiente {
+            background: #fff0c2;
+            color: #805900;
+        }
+
+        .rechazada {
+            background: #fdecea;
+            color: #a12a22;
+        }
+
+        .cancelada {
+            background: #e5e7eb;
+            color: #444;
+        }
+
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .ok {
+            background: #e6f4ea;
+        }
+
+        .error {
+            background: #fdecea;
+        }
+
+        .vacio {
+            text-align: center;
+            padding: 24px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1 th:text="${esAdministrador} ? 'Todas las reservas' : 'Mis reservas'">
+        Mis reservas
+    </h1>
+    <p>Consultá las reservas y solicitudes registradas, junto con su estado.</p>
+    <a th:href="@{/}">Volver al inicio</a>
+</header>
+
+<main>
+    <section>
+
+        <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
+        <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Espacio</th>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th>Reservado por</th>
+                <th>Estado</th>
+                <th>Motivo</th>
+                <th>Acción</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="reserva : ${reservas}">
+                <td th:text="|R-${reserva.id}|"></td>
+
+                <td th:text="${reserva.espacio.nombre}"></td>
+
+                <td th:text="${#temporals.format(reserva.fecha, 'dd/MM/yyyy')}"></td>
+
+                <td th:text="|${#temporals.format(reserva.horaInicio, 'HH:mm')} - ${#temporals.format(reserva.horaFin, 'HH:mm')}|"></td>
+
+                <td th:text="${reserva.reservadoPor}"></td>
+
+                <td>
+                    <span class="estado"
+                          th:classappend="${#strings.toLowerCase(reserva.estado)}"
+                          th:text="${reserva.estado}">
+                    </span>
+                </td>
+
+                <td th:text="${reserva.motivo != null ? reserva.motivo : '-'}"></td>
+
+                <td>
+                    <form th:if="${reserva.estado == 'CONFIRMADA' or reserva.estado == 'PENDIENTE'}"
+                          method="post"
+                          th:action="@{/reservas/{id}/cancelar(id=${reserva.id})}"
+                          onsubmit="return confirm('¿Cancelar esta solicitud o reserva?');">
+                        <button type="submit">Cancelar</button>
+                    </form>
+
+                    <span th:if="${reserva.estado == 'RECHAZADA' or reserva.estado == 'CANCELADA'}">
+                        -
+                    </span>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(reservas)}">
+                <td colspan="8" class="vacio">
+                    No hay reservas ni solicitudes para mostrar.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </section>
+</main>
+
+</body>
+</html>

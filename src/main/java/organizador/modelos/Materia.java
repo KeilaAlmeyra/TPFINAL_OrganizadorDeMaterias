@@ -53,6 +53,9 @@ public class Materia {
         return troncal;
     }
 
+    public boolean isTroncal() {
+        return troncal;
+    }
     public int getAnioCarrera() {
         return anioCarrera;
     }
@@ -60,6 +63,22 @@ public class Materia {
     public String getTipoEspacioFrecuente() {
         return tipoEspacioFrecuente;
     }
+
+
+    public void actualizar(
+            String nombre,
+            int cargaHoraria,
+            boolean troncal,
+            int anioCarrera,
+            String tipoEspacioFrecuente) {
+
+        this.nombre = nombre;
+        this.cargaHoraria = cargaHoraria;
+        this.troncal = troncal;
+        this.anioCarrera = anioCarrera;
+        this.tipoEspacioFrecuente = tipoEspacioFrecuente;
+    }
+
 
     /**
      * Comprueba si la materia requiere un aula común.

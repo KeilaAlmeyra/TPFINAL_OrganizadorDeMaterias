@@ -68,6 +68,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Spring Security: autenticación y control de acceso -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
     </dependencies>
 
     <!-- Configuración de Maven para construir

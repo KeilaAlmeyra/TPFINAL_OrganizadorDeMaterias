@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.util.List;
+import java.time.LocalTime;
 
 @Service
 
@@ -86,14 +87,51 @@ public class GestorAsignaciones {
     /**
      * Aprueba una solicitud y genera su asignación.
      */
+
+    /**
+     * Aprueba una solicitud y genera su asignación original.
+     */
     public Asignacion crearAsignacion(
             String id,
             Solicitud solicitud,
             Espacio espacio) {
 
-        if (solicitud == null || espacio == null) {
+        if (solicitud == null) {
             throw new IllegalArgumentException(
-                    "La solicitud y el espacio son obligatorios."
+                    "La solicitud es obligatoria."
+            );
+        }
+
+        return crearAsignacion(
+                id,
+                solicitud,
+                espacio,
+                solicitud.getDias(),
+                solicitud.getHoraInicio(),
+                solicitud.getHoraFin()
+        );
+    }
+
+    /**
+     * Aprueba una solicitud y genera su asignación
+     * utilizando los días y horarios de una propuesta alternativa.
+     */
+    public Asignacion crearAsignacion(
+            String id,
+            Solicitud solicitud,
+            Espacio espacio,
+            List<DayOfWeek> dias,
+            LocalTime horaInicio,
+            LocalTime horaFin) {
+
+        if (id == null || id.isBlank()
+                || solicitud == null || espacio == null
+                || dias == null || dias.isEmpty()
+                || horaInicio == null || horaFin == null
+                || !horaFin.isAfter(horaInicio)) {
+
+            throw new IllegalArgumentException(
+                    "Los datos de la asignación no son válidos."
             );
         }
 
@@ -112,17 +150,16 @@ public class GestorAsignaciones {
             );
         }
 
-        // Aprobar antes de crear la asignación,
-        // porque el constructor de Asignacion lo requiere.
         solicitud.cambiarEstado(Solicitud.APROBADA);
 
         return new Asignacion(
                 id,
                 solicitud,
                 espacio,
-                solicitud.getDias(),
-                solicitud.getHoraInicio(),
-                solicitud.getHoraFin()
+                dias,
+                horaInicio,
+                horaFin
         );
     }
+
 }

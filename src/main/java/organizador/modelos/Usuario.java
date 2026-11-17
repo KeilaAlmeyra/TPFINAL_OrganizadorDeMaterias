@@ -1,6 +1,7 @@
 
 package organizador.modelos;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -18,16 +19,28 @@ public class Usuario {
 
     private String nombre;
     private String correo;
+
+    @Column(name = "contrasena")
+    private String contrasena;
+
     private String rol;
 
     // Constructor vacío requerido por JPA.
     protected Usuario() {
     }
 
+    // Constructor anterior: se conserva para no romper los datos de prueba.
     public Usuario(String id, String nombre, String correo, String rol) {
+        this(id, nombre, correo, null, rol);
+    }
+
+    // Constructor nuevo: permite crear usuarios con contraseña.
+    public Usuario(String id, String nombre, String correo,
+                   String contrasena, String rol) {
         this.id = id;
         this.nombre = nombre;
         this.correo = correo;
+        this.contrasena = contrasena;
         this.rol = rol;
     }
 
@@ -43,16 +56,20 @@ public class Usuario {
         return correo;
     }
 
+    public String getContrasena() {
+        return contrasena;
+    }
+
     public String getRol() {
         return rol;
     }
 
     public boolean esProfesor() {
-        return rol.equalsIgnoreCase("profesor");
+        return rol != null && rol.equalsIgnoreCase("profesor");
     }
 
     public boolean esAdministrador() {
-        return rol.equalsIgnoreCase("administrador");
+        return rol != null && rol.equalsIgnoreCase("administrador");
     }
 
     @Override

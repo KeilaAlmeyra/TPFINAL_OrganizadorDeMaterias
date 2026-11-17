@@ -1,3 +1,4 @@
+
 package organizador.servicios;
 
 import organizador.modelos.Espacio;
@@ -9,14 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-/**
- * Reglas de las reservas: valida los datos
- * y evita que dos reservas se pisen.
- */
 @Service
 public class ReservaService {
 
-    // Horario en el que funciona la facultad.
     private static final LocalTime APERTURA = LocalTime.of(8, 0);
     private static final LocalTime CIERRE = LocalTime.of(22, 0);
 
@@ -29,13 +25,14 @@ public class ReservaService {
         this.gestorEspacios = gestorEspacios;
     }
 
-    /**
-     * Crea una reserva y la guarda en la base de datos.
-     * Si algo está mal lanza IllegalArgumentException con el motivo.
-     */
     public Reserva reservar(String espacioId, LocalDate fecha,
                             LocalTime horaInicio, LocalTime horaFin,
-                            String reservadoPor) {
+                            String reservadoPor, String propietarioCorreo) {
+
+        if (propietarioCorreo == null || propietarioCorreo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "No se pudo identificar al usuario.");
+        }
 
         Espacio espacio = gestorEspacios.buscarPorId(espacioId);
 
@@ -45,16 +42,18 @@ public class ReservaService {
 
         if (!espacio.estaDisponible()) {
             throw new IllegalArgumentException(
-                    "El espacio no está disponible.");
+                    "El espacio no está habilitado para utilizarse.");
         }
 
-        // El constructor de Reserva valida fecha, horas y nombre.
-        Reserva reserva = new Reserva(
-                espacio, fecha, horaInicio, horaFin, reservadoPor);
-
-        if (fecha.isBefore(LocalDate.now())) {
+        if (fecha == null || fecha.isBefore(LocalDate.now())) {
             throw new IllegalArgumentException(
                     "No se puede reservar en una fecha pasada.");
+        }
+
+        if (horaInicio == null || horaFin == null
+                || !horaFin.isAfter(horaInicio)) {
+            throw new IllegalArgumentException(
+                    "La hora de fin debe ser posterior a la de inicio.");
         }
 
         if (horaInicio.isBefore(APERTURA) || horaFin.isAfter(CIERRE)) {
@@ -62,45 +61,151 @@ public class ReservaService {
                     "El horario debe estar entre las 08:00 y las 22:00.");
         }
 
-        if (reservaRepositorio.contarSuperposiciones(
-                espacioId, fecha, horaInicio, horaFin) > 0) {
-            throw new IllegalArgumentException(
-                    "Ese espacio ya está reservado en ese horario.");
-        }
-
-        if (horaInicio.getMinute() % 30 != 0 || horaFin.getMinute() % 30 != 0) {
+        if (horaInicio.getMinute() % 30 != 0
+                || horaFin.getMinute() % 30 != 0) {
             throw new IllegalArgumentException(
                     "Los horarios deben ser en punto o y media.");
+        }
+
+        Reserva reserva = new Reserva(
+                espacio,
+                fecha,
+                horaInicio,
+                horaFin,
+                reservadoPor,
+                propietarioCorreo
+        );
+
+        long superposiciones = reservaRepositorio.contarSuperposiciones(
+                espacioId, fecha, horaInicio, horaFin
+        );
+
+        if (superposiciones > 0) {
+            reserva.marcarPendiente(
+                    "El espacio ya tiene una reserva confirmada "
+                            + "en ese horario. Requiere revisión del administrador."
+            );
         }
 
         return reservaRepositorio.save(reserva);
     }
 
-    /**
-     * Lista las reservas. Si se indica un nombre,
-     * muestra solo las de esa persona.
-     */
-    public List<Reserva> listar(String reservadoPor) {
+    // El administrador ve todas; el profesor, solamente las propias.
+    public List<Reserva> listar(String correo, boolean esAdministrador) {
 
-        if (reservadoPor == null || reservadoPor.isBlank()) {
+        if (esAdministrador) {
             return reservaRepositorio.findAllByOrderByFechaAscHoraInicioAsc();
         }
 
+        if (correo == null || correo.isBlank()) {
+            return List.of();
+        }
+
         return reservaRepositorio
-                .findByReservadoPorContainingIgnoreCaseOrderByFechaAscHoraInicioAsc(
-                        reservadoPor.trim());
+                .findByPropietarioCorreoIgnoreCaseOrderByFechaAscHoraInicioAsc(
+                        correo);
     }
 
-    /**
-     * Cancela (borra) una reserva. Devuelve false si no existía.
-     */
-    public boolean cancelar(Long id) {
+    // El administrador consulta las solicitudes pendientes.
+    public List<Reserva> listarPendientes() {
+        return reservaRepositorio
+                .findByEstadoOrderByFechaAscHoraInicioAsc("PENDIENTE");
+    }
 
-        if (id == null || !reservaRepositorio.existsById(id)) {
+    // El administrador aprueba una solicitud pendiente.
+    public Reserva aprobar(Long id) {
+
+        Reserva reserva = reservaRepositorio.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No se encontró la solicitud."));
+
+        if (!"PENDIENTE".equals(reserva.getEstado())) {
+            throw new IllegalArgumentException(
+                    "La solicitud ya no está pendiente.");
+        }
+
+        long superposiciones = reservaRepositorio.contarSuperposiciones(
+                reserva.getEspacio().getId(),
+                reserva.getFecha(),
+                reserva.getHoraInicio(),
+                reserva.getHoraFin()
+        );
+
+        if (superposiciones > 0) {
+            throw new IllegalArgumentException(
+                    "No se puede aprobar: el horario continúa ocupado."
+            );
+        }
+
+        reserva.confirmar();
+
+        return reservaRepositorio.save(reserva);
+    }
+
+    // El administrador rechaza una solicitud pendiente.
+    public Reserva rechazar(Long id, String motivo) {
+
+        Reserva reserva = reservaRepositorio.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No se encontró la solicitud."));
+
+        if (!"PENDIENTE".equals(reserva.getEstado())) {
+            throw new IllegalArgumentException(
+                    "La solicitud ya no está pendiente.");
+        }
+
+        if (motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Debe indicar el motivo del rechazo.");
+        }
+
+        reserva.rechazar(motivo.trim());
+
+        return reservaRepositorio.save(reserva);
+    }
+
+    // Cancela conservando el registro histórico.
+
+    public boolean cancelar(Long id, String correo, boolean esAdministrador) {
+
+        if (id == null) {
             return false;
         }
 
-        reservaRepositorio.deleteById(id);
-        return true;
+        if (esAdministrador) {
+            return reservaRepositorio.findById(id)
+                    .map(reserva -> {
+
+                        if ("CANCELADA".equals(reserva.getEstado())
+                                || "RECHAZADA".equals(reserva.getEstado())) {
+                            return false;
+                        }
+
+                        reserva.cancelar();
+                        reservaRepositorio.save(reserva);
+                        return true;
+                    })
+                    .orElse(false);
+        }
+
+        if (correo == null || correo.isBlank()) {
+            return false;
+        }
+
+        return reservaRepositorio
+                .findByIdAndPropietarioCorreoIgnoreCase(id, correo)
+                .map(reserva -> {
+
+                    if ("CANCELADA".equals(reserva.getEstado())
+                            || "RECHAZADA".equals(reserva.getEstado())) {
+                        return false;
+                    }
+
+                    reserva.cancelar();
+                    reservaRepositorio.save(reserva);
+                    return true;
+                })
+                .orElse(false);
     }
+
 }

@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Administración de espacios</title>
+
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background: #FFF7E6;
+            color: #2D3A47;
+            margin: 0;
+        }
+
+        header {
+            background: #2D3A47;
+            color: #FFF7E6;
+            padding: 20px 32px;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        h2 { color: #B46A72; }
+
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-top: 4px;
+        }
+
+        button {
+            background: #2D3A47;
+            color: white;
+            border: 0;
+            border-radius: 4px;
+            padding: 10px 18px;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #A9B7C6;
+        }
+
+        th { background: #F7C8D3; }
+
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        .ok { background: #e6f4ea; }
+        .error { background: #fdecea; }
+
+        .acciones {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .acciones form {
+            margin: 0;
+        }
+
+        .acciones button {
+            margin-top: 0;
+        }
+
+        .editar {
+            display: inline-block;
+            background: #A9B7C6;
+            color: #2D3A47;
+            border-radius: 4px;
+            padding: 8px 12px;
+            text-decoration: none;
+        }
+
+        .eliminar {
+            background: #B46A72;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Administración de espacios</h1>
+    <a th:href="@{/}" style="color:white">Volver al inicio</a>
+</header>
+
+<main>
+
+    <p class="mensaje ok" th:if="${ok}" th:text="${ok}"></p>
+    <p class="mensaje error" th:if="${error}" th:text="${error}"></p>
+
+    <section>
+        <h2 th:if="${espacioEditar == null}">Registrar nuevo espacio</h2>
+        <h2 th:if="${espacioEditar != null}">Modificar espacio</h2>
+
+        <form method="post"
+              th:action="${espacioEditar == null}
+                    ? @{/espacios/registrar}
+                    : @{/espacios/modificar}">
+
+            <label for="id">Código identificador</label>
+            <input id="id"
+                   name="id"
+                   type="text"
+                   required
+                   th:value="${espacioEditar != null ? espacioEditar.id : ''}"
+                   th:readonly="${espacioEditar != null}">
+
+            <label for="nombre">Nombre</label>
+            <input id="nombre"
+                   name="nombre"
+                   type="text"
+                   required
+                   th:value="${espacioEditar != null ? espacioEditar.nombre : ''}">
+
+            <label for="capacidadMaxima">Capacidad máxima</label>
+            <input id="capacidadMaxima"
+                   name="capacidadMaxima"
+                   type="number"
+                   min="1"
+                   required
+                   th:value="${espacioEditar != null ? espacioEditar.capacidadMaxima : ''}">
+
+            <label for="tipoEspacio">Tipo de espacio</label>
+            <select id="tipoEspacio" name="tipoEspacio" required>
+                <option value="">Seleccione un tipo</option>
+                <option value="aula"
+                        th:selected="${espacioEditar != null and espacioEditar.tipoEspacio == 'aula'}">
+                    Aula
+                </option>
+                <option value="computadoras"
+                        th:selected="${espacioEditar != null and espacioEditar.tipoEspacio == 'computadoras'}">
+                    Aula con computadoras
+                </option>
+                <option value="laboratorio"
+                        th:selected="${espacioEditar != null and espacioEditar.tipoEspacio == 'laboratorio'}">
+                    Laboratorio
+                </option>
+            </select>
+
+            <div th:if="${espacioEditar != null}">
+                <label for="estado">Estado</label>
+                <select id="estado" name="estado" required>
+                    <option value="disponible"
+                            th:selected="${espacioEditar.estado == 'disponible'}">
+                        Disponible
+                    </option>
+                    <option value="mantenimiento"
+                            th:selected="${espacioEditar.estado == 'mantenimiento'}">
+                        En mantenimiento
+                    </option>
+                </select>
+            </div>
+
+            <button type="submit"
+                    th:text="${espacioEditar == null ? 'Registrar espacio' : 'Guardar cambios'}">
+            </button>
+
+            <a th:if="${espacioEditar != null}"
+               th:href="@{/espacios}">
+                Cancelar edición
+            </a>
+        </form>
+    </section>
+
+    <section>
+        <h2>Espacios registrados</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Capacidad</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="espacio : ${espacios}">
+                <td th:text="${espacio.id}"></td>
+                <td th:text="${espacio.nombre}"></td>
+                <td th:text="${espacio.tipoEspacio}"></td>
+                <td th:text="${espacio.capacidadMaxima}"></td>
+                <td th:text="${espacio.estado}"></td>
+
+                <td>
+                    <div class="acciones">
+                        <a class="editar"
+                           th:href="@{/espacios(editar=${espacio.id})}">
+                            Editar
+                        </a>
+
+                        <form method="post"
+                              th:action="@{/espacios/eliminar/{id}(id=${espacio.id})}"
+                              onsubmit="return confirm('¿Está seguro de que desea eliminar este espacio?');">
+
+                            <button class="eliminar" type="submit">
+                                Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(espacios)}">
+                <td colspan="6">
+                    Todavía no hay espacios registrados.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+</main>
+</body>
+</html>

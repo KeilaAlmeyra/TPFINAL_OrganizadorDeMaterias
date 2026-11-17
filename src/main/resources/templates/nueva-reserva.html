@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reservar espacio</title>
+    <style>
+        :root {
+            --crema: #FFF7E6;
+            --rosa: #F7C8D3;
+            --rojo: #B46A72;
+            --celeste: #A9B7C6;
+            --azul: #2D3A47;
+        }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background: var(--crema);
+            color: var(--azul);
+            margin: 0;
+        }
+        header {
+            background: var(--azul);
+            color: var(--crema);
+            padding: 20px 32px;
+        }
+        header a { color: var(--crema); }
+        main {
+            max-width: 700px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+        section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+        }
+        h2 { color: var(--rojo); }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            box-sizing: border-box;
+            border: 1px solid var(--celeste);
+            border-radius: 4px;
+        }
+        .fila {
+            display: flex;
+            gap: 16px;
+        }
+        .fila > div { flex: 1; }
+        button {
+            background: var(--azul);
+            color: white;
+            border: 0;
+            border-radius: 4px;
+            padding: 10px 18px;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+        .mensaje {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+        .ok { background: #e6f4ea; }
+        .error { background: #fdecea; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Reservar un espacio</h1>
+    <p>Realizá una reserva puntual de un aula o espacio de la facultad.</p>
+    <a th:href="@{/}">Volver al inicio</a>
+</header>
+
+<main>
+    <section>
+        <h2>Nueva reserva</h2>
+
+        <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
+        <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
+
+        <p>
+            Reservando como:
+            <strong th:text="${usuario}"></strong>
+        </p>
+
+        <form method="post" th:action="@{/reservar}">
+
+            <label for="espacio">Espacio</label>
+            <select id="espacio" name="espacio" required>
+                <option value="">Elegí un espacio</option>
+                <option th:each="espacio : ${espaciosDisponibles}"
+                        th:value="${espacio.id}"
+                        th:text="|${espacio.nombre} (${espacio.capacidadMaxima} personas)|">
+                </option>
+            </select>
+
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" name="fecha"
+                   th:min="${hoy}" required>
+
+            <div class="fila">
+                <div>
+                    <label for="horaInicio">Hora de inicio</label>
+                    <select id="horaInicio" name="horaInicio" required>
+                        <option value="">Elegí una hora</option>
+                        <th:block th:each="h : ${#numbers.sequence(8, 21)}">
+                            <option th:value="${#numbers.formatInteger(h, 2) + ':00'}"
+                                    th:text="${#numbers.formatInteger(h, 2) + ':00'}"></option>
+                            <option th:value="${#numbers.formatInteger(h, 2) + ':30'}"
+                                    th:text="${#numbers.formatInteger(h, 2) + ':30'}"></option>
+                        </th:block>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="horaFin">Hora de fin</label>
+                    <select id="horaFin" name="horaFin" required>
+                        <option value="">Elegí una hora</option>
+                        <th:block th:each="h : ${#numbers.sequence(8, 21)}">
+                            <option th:value="${#numbers.formatInteger(h, 2) + ':30'}"
+                                    th:text="${#numbers.formatInteger(h, 2) + ':30'}"></option>
+                            <option th:value="${#numbers.formatInteger(h + 1, 2) + ':00'}"
+                                    th:text="${#numbers.formatInteger(h + 1, 2) + ':00'}"></option>
+                        </th:block>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit">Confirmar reserva</button>
+        </form>
+    </section>
+</main>
+
+</body>
+</html>
+

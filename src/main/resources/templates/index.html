@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -5,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Organizador de Materias</title>
 
-    <!-- Estilos: colores, tamaños y espacios de la página -->
     <style>
         :root {
             --crema: #FFF7E6;
@@ -15,35 +15,52 @@
             --celeste: #A9B7C6;
             --azul: #2D3A47;
         }
+
         body {
             font-family: "Times New Roman", Times, serif;
             background-color: var(--crema);
             color: var(--azul);
             margin: 0;
         }
+
         header {
             background-color: var(--azul);
             color: var(--crema);
             padding: 20px 32px;
         }
-        header h1 { margin: 0 0 4px 0; font-size: 26px; }
-        header p  { margin: 0; opacity: 0.85; }
+
+        header h1 {
+            margin: 0 0 4px 0;
+            font-size: 26px;
+        }
+
+        header p {
+            margin: 0;
+            opacity: 0.85;
+        }
+
         nav {
             background-color: var(--celeste);
             padding: 10px 32px;
         }
+
         nav a {
             color: var(--azul);
             text-decoration: none;
             margin-right: 20px;
             font-weight: bold;
         }
-        nav a:hover { text-decoration: underline; }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
         main {
             max-width: 900px;
             margin: 24px auto;
             padding: 0 16px;
         }
+
         section {
             background-color: white;
             border-radius: 8px;
@@ -51,23 +68,38 @@
             margin-bottom: 24px;
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
         }
-        h2 { margin-top: 0; color: var(--rojo); }
-        table { width: 100%; border-collapse: collapse; }
+
+        h2 {
+            margin-top: 0;
+            color: var(--rojo);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
         th, td {
             text-align: left;
             padding: 10px;
             border-bottom: 1px solid var(--celeste);
         }
-        th { background-color: var(--rosa); }
+
+        th {
+            background-color: var(--rosa);
+        }
+
         label {
             display: block;
             margin-top: 12px;
             font-weight: bold;
             font-size: 14px;
         }
+
         input, select, button {
             font-family: inherit;
         }
+
         input, select {
             width: 100%;
             padding: 8px;
@@ -77,8 +109,16 @@
             box-sizing: border-box;
             font-size: 15px;
         }
-        .fila { display: flex; gap: 16px; }
-        .fila > div { flex: 1; }
+
+        .fila {
+            display: flex;
+            gap: 16px;
+        }
+
+        .fila > div {
+            flex: 1;
+        }
+
         button {
             background-color: var(--azul);
             color: var(--crema);
@@ -89,7 +129,12 @@
             cursor: pointer;
             margin-top: 16px;
         }
-        button:hover { background-color: var(--verde); color: var(--azul); }
+
+        button:hover {
+            background-color: var(--verde);
+            color: var(--azul);
+        }
+
         button.cancelar {
             background-color: var(--rosa);
             color: var(--azul);
@@ -97,14 +142,11 @@
             margin: 0;
             padding: 6px 12px;
         }
-        button.cancelar:hover { background-color: var(--rojo); color: white; }
-        .mensaje {
-            padding: 12px;
-            border-radius: 4px;
-            margin-top: 16px;
+
+        button.cancelar:hover {
+            background-color: var(--rojo);
+            color: white;
         }
-        .ok    { background-color: var(--verde); }
-        .error { background-color: var(--rosa); border-left: 4px solid var(--rojo); }
 
         .mensaje {
             padding: 12px 16px;
@@ -112,156 +154,95 @@
             margin-bottom: 16px;
             font-weight: 600;
         }
+
         .mensaje.ok {
             background: #e6f4ea;
             color: #1e6b34;
             border: 1px solid #b7dfc2;
         }
+
         .mensaje.error {
             background: #fdecea;
             color: #a12a22;
             border: 1px solid #f3b9b4;
         }
 
+        nav form {
+            display: inline;
+        }
+
+        nav form button {
+            margin: 0;
+            padding: 6px 12px;
+            background-color: var(--azul);
+            color: var(--crema);
+        }
     </style>
 </head>
+
 <body>
 
-<!-- Encabezado -->
 <header>
     <h1>Organizador de Espacios</h1>
     <p>Sistema de organización y reserva de espacios de la facultad.</p>
 </header>
 
-<!-- Menú: cada enlace lleva a una sección de la misma página -->
+
 <nav>
-    <a href="#espacios">Espacios</a>
-    <a href="#reservar">Reservar</a>
-    <a href="#mis-reservas">Mis reservas</a>
+    <a th:href="@{/consulta-espacios}">
+        Consultar espacios
+    </a>
+
+    <a th:href="@{/reservar}">
+        Reservar un espacio
+    </a>
+
+    <a th:href="@{/mis-reservas}">
+        Mis reservas
+    </a>
+
+    <a th:href="@{/prueba-asignaciones}">
+        Pedir asignación de aulas
+    </a>
+
+    <a th:href="@{/mis-asignaciones}">
+        Ver mis asignaciones
+    </a>
+
+    <a th:if="${esAdministrador}" th:href="@{/configuracion}">
+        Configuración académica
+    </a>
+
+    <a th:if="${esAdministrador}" th:href="@{/espacios}">
+        Administrar espacios
+    </a>
+
+    <a th:if="${esAdministrador}" th:href="@{/materias}">
+        Administrar materias
+    </a>
+
+    <a th:if="${esAdministrador}" th:href="@{/solicitudes-pendientes}">
+        Solicitudes pendientes
+    </a>
+
+    <a th:if="${esAdministrador}" th:href="@{/usuarios}">
+        Administración de usuarios
+    </a>
+
+    <form method="post" th:action="@{/logout}" style="display:inline">
+        <button type="submit">Cerrar sesión</button>
+    </form>
 </nav>
 
 <main>
-
-    <section id="reservar">
-        <h2>Nueva reserva</h2>
-
-        <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
-        <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
-
-        <form method="post" th:action="@{/reservar}">
-
-    <!-- Sección 1: lista de espacios -->
-    <section id="espacios">
-        <h2>Espacios</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Capacidad</th>
-            </tr>
-            </thead>
-            <tr th:each="espacio : ${espacios}">
-                <td th:text="${espacio.id}">AULA-1</td>
-                <td th:text="${espacio.nombre}">Aula 1</td>
-                <td th:text="${espacio.tipoEspacio}">aula</td>
-                <td th:text="${espacio.capacidadMaxima}">40</td>
-            </tr>
-        </table>
+    <section>
+        <h2>Bienvenido al Organizador de Espacios</h2>
+        <p>
+            Seleccioná una opción del menú para consultar espacios,
+            realizar reservas o solicitar la asignación de aulas
+            para el cuatrimestre.
+        </p>
     </section>
-
-    <!-- Sección 2: formulario para reservar -->
-    <section id="reservar">
-        <h2>Nueva reserva</h2>
-        <form method="post" th:action="@{/reservar}">
-            <label for="espacio">Espacio</label>
-            <select id="espacio" name="espacio">
-                <option th:each="espacio : ${espaciosDisponibles}"
-                        th:value="${espacio.id}"
-                        th:text="|${espacio.nombre} (${espacio.capacidadMaxima} personas)|">
-                </option>
-            </select>
-
-            <label for="fecha">Fecha</label>
-            <input type="date" id="fecha" name="fecha" th:min="${hoy}" required>
-
-            <div class="fila">
-                <div>
-                    <label for="horaInicio">Hora de inicio</label>
-                    <select id="horaInicio" name="horaInicio" required>
-                        <option value="">Elegí una hora</option>
-                        <!-- De 08:00 a 21:30, cada 30 minutos -->
-                        <th:block th:each="h : ${#numbers.sequence(8, 21)}">
-                            <option th:value="${#numbers.formatInteger(h, 2) + ':00'}"
-                                    th:text="${#numbers.formatInteger(h, 2) + ':00'}"></option>
-                            <option th:value="${#numbers.formatInteger(h, 2) + ':30'}"
-                                    th:text="${#numbers.formatInteger(h, 2) + ':30'}"></option>
-                        </th:block>
-                    </select>
-                </div>
-                <div>
-                    <label for="horaFin">Hora de fin</label>
-                    <select id="horaFin" name="horaFin" required>
-                        <option value="">Elegí una hora</option>
-                        <!-- De 08:30 a 22:00, cada 30 minutos -->
-                        <th:block th:each="h : ${#numbers.sequence(8, 21)}">
-                            <option th:value="${#numbers.formatInteger(h, 2) + ':30'}"
-                                    th:text="${#numbers.formatInteger(h, 2) + ':30'}"></option>
-                            <option th:value="${#numbers.formatInteger(h + 1, 2) + ':00'}"
-                                    th:text="${#numbers.formatInteger(h + 1, 2) + ':00'}"></option>
-                        </th:block>
-                    </select>
-                </div>
-            </div>
-
-            <label for="usuario">Reservado por</label>
-            <input type="text" id="usuario" name="usuario" placeholder="Tu nombre" required>
-
-            <button type="submit">Reservar</button>
-        </form>
-    </section>
-
-    <!-- Sección 3: reservas de la persona -->
-    <section id="mis-reservas">
-        <h2>Mis reservas</h2>
-
-        <form method="get" th:action="@{/}">
-            <label for="filtro">Buscar por nombre</label>
-            <div class="fila">
-                <div><input type="text" id="filtro" name="usuario" th:value="${usuario}" placeholder="Vacío para ver todas"></div>
-                <div><button type="submit" style="margin-top:4px">Buscar</button></div>
-            </div>
-        </form>
-
-        <table style="margin-top:16px">
-            <thead>
-            <tr>
-                <th>Código</th>
-                <th>Espacio</th>
-                <th>Fecha</th>
-                <th>Horario</th>
-                <th>Reservado por</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tr th:each="reserva : ${reservas}">
-                <td th:text="|R-${reserva.id}|">R-1</td>
-                <td th:text="${reserva.espacio.nombre}">Aula 1</td>
-                <td th:text="${#temporals.format(reserva.fecha, 'dd/MM/yyyy')}">01/01/2026</td>
-                <td th:text="|${#temporals.format(reserva.horaInicio, 'HH:mm')} - ${#temporals.format(reserva.horaFin, 'HH:mm')}|">08:00 - 10:00</td>
-                <td th:text="${reserva.reservadoPor}">Nombre</td>
-                <td>
-                    <form method="post" th:action="@{/reservas/{id}/cancelar(id=${reserva.id})}"
-                          onsubmit="return confirm('¿Cancelar esta reserva?');">
-                        <button type="submit" class="cancelar">Cancelar</button>
-                    </form>
-                </td>
-            </tr>
-        </table>
-        <p th:if="${#lists.isEmpty(reservas)}">No hay reservas para mostrar.</p>
-    </section>
-
 </main>
 
 </body>

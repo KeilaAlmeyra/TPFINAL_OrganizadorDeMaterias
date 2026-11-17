@@ -1,3 +1,4 @@
+
 package organizador.modelos;
 
 import jakarta.persistence.Entity;
@@ -5,63 +6,70 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-
-/**
- * Representa la reserva de un espacio en una fecha y horario.
- */
-// @Entity; Indica q la clase se guarda en la base de datos
 @Entity
 public class Reserva {
 
-    @Id // Clave primaria
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //Muchas resercas pueden ser del mismo espacio y todas las reservas deben tener 'espacio',
     @ManyToOne(optional = false)
     private Espacio espacio;
 
     private LocalDate fecha;
     private LocalTime horaInicio;
     private LocalTime horaFin;
+
+    // Nombre que se muestra en pantalla.
     private String reservadoPor;
 
-    /**
-     * El constructor vacío es para que JPA pueda usarlo
-     */
+    // Correo de la cuenta que creó la reserva.
+    private String propietarioCorreo;
+
+    // Estado de la solicitud.
+    private String estado;
+
+    // Motivo del conflicto o de la decisión del administrador.
+    private String motivo;
+
     protected Reserva() {}
 
     public Reserva(Espacio espacio, LocalDate fecha,
                    LocalTime horaInicio, LocalTime horaFin,
                    String reservadoPor) {
 
+        this(espacio, fecha, horaInicio, horaFin,
+                reservadoPor, null);
+    }
+
+    public Reserva(Espacio espacio, LocalDate fecha,
+                   LocalTime horaInicio, LocalTime horaFin,
+                   String reservadoPor, String propietarioCorreo) {
+
         if (espacio == null) {
             throw new IllegalArgumentException(
-                    "La reserva debe tener un espacio."
-            );
+                    "La reserva debe tener un espacio.");
         }
 
         if (fecha == null) {
             throw new IllegalArgumentException(
-                    "La reserva debe tener una fecha."
-            );
+                    "La reserva debe tener una fecha.");
         }
 
         if (horaInicio == null || horaFin == null
                 || !horaFin.isAfter(horaInicio)) {
             throw new IllegalArgumentException(
-                    "La hora de fin debe ser posterior a la de inicio."
-            );
+                    "La hora de fin debe ser posterior a la de inicio.");
         }
 
         if (reservadoPor == null || reservadoPor.isBlank()) {
             throw new IllegalArgumentException(
-                    "Debe indicar quién reserva."
-            );
+                    "Debe indicar quién reserva.");
         }
 
         this.espacio = espacio;
@@ -69,6 +77,21 @@ public class Reserva {
         this.horaInicio = horaInicio;
         this.horaFin = horaFin;
         this.reservadoPor = reservadoPor.trim();
+
+        this.propietarioCorreo = propietarioCorreo == null
+                ? null
+                : propietarioCorreo.trim().toLowerCase();
+
+        // Las reservas nuevas comienzan confirmadas.
+        // El servicio podrá cambiarlas a pendientes si hay conflicto.
+        this.estado = "CONFIRMADA";
+    }
+
+    @PrePersist
+    public void establecerEstadoInicial() {
+        if (estado == null || estado.isBlank()) {
+            estado = "CONFIRMADA";
+        }
     }
 
     public Long getId() {
@@ -95,10 +118,39 @@ public class Reserva {
         return reservadoPor;
     }
 
-    /**
-     * Comprueba si dos reservas usan el mismo espacio,
-     * en la misma fecha y con horarios que se pisan.
-     */
+    public String getPropietarioCorreo() {
+        return propietarioCorreo;
+    }
+
+    public String getEstado() {
+        // Los registros anteriores a este cambio se consideran confirmados.
+        return estado == null ? "CONFIRMADA" : estado;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public void marcarPendiente(String motivo) {
+        this.estado = "PENDIENTE";
+        this.motivo = motivo;
+    }
+
+    public void confirmar() {
+        this.estado = "CONFIRMADA";
+        this.motivo = null;
+    }
+
+    public void rechazar(String motivo) {
+        this.estado = "RECHAZADA";
+        this.motivo = motivo;
+    }
+
+    public void cancelar() {
+        this.estado = "CANCELADA";
+        this.motivo = "Cancelada por el usuario o administrador.";
+    }
+
     public boolean seSuperponeCon(Reserva otra) {
 
         if (otra == null) {

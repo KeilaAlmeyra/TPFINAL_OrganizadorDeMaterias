@@ -1,3 +1,4 @@
+
 package organizador.repositorios;
 
 import organizador.modelos.Reserva;
@@ -8,32 +9,40 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
-/**
- * Acceso a la tabla RESERVA.
- *
- * JpaRepository<Reserva, Long>: trabaja con Reserva y su @Id es de tipo Long.
- * Trae los métodos básicos (save, existsById, deleteById...) y además
- * declaramos tres consultas propias.
- */
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
-    // Todas las reservas, ordenadas por fecha y hora.
     List<Reserva> findAllByOrderByFechaAscHoraInicioAsc();
 
-    // Reservas de una persona (por parte del nombre, sin importar mayúsculas).
-    List<Reserva> findByReservadoPorContainingIgnoreCaseOrderByFechaAscHoraInicioAsc(String nombre);
+    List<Reserva> findByReservadoPorContainingIgnoreCaseOrderByFechaAscHoraInicioAsc(
+            String nombre);
 
-    // Cuenta las reservas del mismo espacio y fecha que se pisan con el horario pedido.
+    // Reservas pertenecientes a una cuenta.
+    List<Reserva> findByPropietarioCorreoIgnoreCaseOrderByFechaAscHoraInicioAsc(
+            String correo);
+
+    // Solicitudes que esperan revisión del administrador.
+    List<Reserva> findByEstadoOrderByFechaAscHoraInicioAsc(String estado);
+
+    // Busca una reserva únicamente si pertenece a ese usuario.
+    Optional<Reserva> findByIdAndPropietarioCorreoIgnoreCase(
+            Long id, String correo);
+
+
+
     @Query("""
-            select count(r) from Reserva r
-            where r.espacio.id = :espacioId
-              and r.fecha = :fecha
-              and r.horaInicio < :fin
-              and r.horaFin > :inicio
-            """)
+        select count(r) from Reserva r
+        where r.espacio.id = :espacioId
+          and r.fecha = :fecha
+          and (r.estado = 'CONFIRMADA' or r.estado is null)
+          and r.horaInicio < :fin
+          and r.horaFin > :inicio
+        """)
     long contarSuperposiciones(@Param("espacioId") String espacioId,
                                @Param("fecha") LocalDate fecha,
                                @Param("inicio") LocalTime inicio,
                                @Param("fin") LocalTime fin);
+
+    boolean existsByEspacio_Id(String espacioId);
 }

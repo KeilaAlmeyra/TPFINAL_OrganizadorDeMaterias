@@ -51,6 +51,18 @@ public class Espacio {
         return estado;
     }
 
+    public void actualizar(
+            String nombre,
+            int capacidadMaxima,
+            String tipoEspacio,
+            String estado) {
+
+        this.nombre = nombre;
+        this.capacidadMaxima = capacidadMaxima;
+        this.tipoEspacio = tipoEspacio;
+        this.estado = estado;
+    }
+
     /**
      * Comprueba si el espacio tiene capacidad suficiente.
      */

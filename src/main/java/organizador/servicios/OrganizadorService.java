@@ -21,6 +21,7 @@ public class OrganizadorService {
     private final GestorEspacios gestorEspacios;
     private final GestorAsignaciones gestorAsignaciones;
     private final GestorCumplimiento gestorCumplimiento;
+    private final PrologService prologService;
 
     // Constructor: recibe las dependencias de Spring.
     public OrganizadorService(
@@ -30,7 +31,8 @@ public class OrganizadorService {
             CalculadorPrioridad calculadorPrioridad,
             GestorEspacios gestorEspacios,
             GestorAsignaciones gestorAsignaciones,
-            GestorCumplimiento gestorCumplimiento) {
+            GestorCumplimiento gestorCumplimiento,
+            PrologService prologService) {
 
         this.solicitudRepository = solicitudRepository;
         this.asignacionRepository = asignacionRepository;
@@ -39,6 +41,7 @@ public class OrganizadorService {
         this.gestorEspacios = gestorEspacios;
         this.gestorAsignaciones = gestorAsignaciones;
         this.gestorCumplimiento = gestorCumplimiento;
+        this.prologService = prologService;
     }
 
     /**
@@ -122,8 +125,8 @@ public class OrganizadorService {
         List<Solicitud> solicitudesOrdenadas =
                 ordenarSolicitudesPendientes();
 
-        // Obtener los espacios disponibles.
-        var espaciosDisponibles = gestorEspacios.obtenerDisponibles();
+        // Prolog evalua el estado, tipo, capacidad y ocupacion de cada espacio.
+        var espaciosDisponibles = gestorEspacios.obtenerEspacios();
 
         // Obtener las asignaciones que ya existen.
         List<Asignacion> asignacionesActuales =
@@ -137,10 +140,11 @@ public class OrganizadorService {
         for (Solicitud solicitud : solicitudesOrdenadas) {
 
             // Buscar un espacio compatible y libre.
-            var espacio = gestorAsignaciones.buscarEspacioCompatible(
+            var espacio = prologService.buscarEspacioCompatible(
                     solicitud,
                     espaciosDisponibles,
-                    asignacionesActuales
+                    asignacionesActuales,
+                    List.of()
             );
 
             // Si no hay espacio, la solicitud continúa pendiente.
