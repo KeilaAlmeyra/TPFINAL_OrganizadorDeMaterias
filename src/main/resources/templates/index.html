@@ -181,11 +181,11 @@
 
         <nav class="indice">
             <a th:href="@{/consulta-espacios}">
-                Espacios
+                Ver aulas
             </a>
 
             <a th:href="@{/reservar}">
-                Reservar
+                Solicitar reserva
             </a>
 
             <a th:href="@{/mis-reservas}">
@@ -193,7 +193,7 @@
             </a>
 
             <a th:href="@{/prueba-asignaciones}">
-                Asignación de aulas
+                Solicitar asignación
             </a>
 
             <a th:href="@{/mis-asignaciones}">
@@ -201,6 +201,10 @@
             </a>
 
             <div th:if="${esAdministrador}" class="separador"></div>
+
+            <a th:if="${esAdministrador}" th:href="@{/solicitudes-pendientes}">
+                Revisar solicitudes
+            </a>
 
             <a th:if="${esAdministrador}" th:href="@{/configuracion}">
                 Configuración académica
@@ -214,9 +218,6 @@
                 Administrar materias
             </a>
 
-            <a th:if="${esAdministrador}" th:href="@{/solicitudes-pendientes}">
-                Solicitudes pendientes
-            </a>
 
             <a th:if="${esAdministrador}" th:href="@{/usuarios}">
                 Administrar usuarios
