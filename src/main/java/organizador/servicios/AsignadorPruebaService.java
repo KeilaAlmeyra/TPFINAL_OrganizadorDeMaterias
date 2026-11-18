@@ -96,6 +96,13 @@ public class AsignadorPruebaService {
             LocalTime horaFin,
             String tipoActividad) {
 
+        if (!Solicitud.CLASE_REGULAR.equals(tipoActividad)) {
+            throw new IllegalArgumentException(
+                    "Solo se pueden solicitar asignaciones para clases regulares. "
+                            + "Los exámenes y parciales deben gestionarse mediante reservas."
+            );
+        }
+
         ModoFuncionamiento modo =
                 configuracionService.obtenerModoActual();
 
@@ -158,7 +165,7 @@ public class AsignadorPruebaService {
         List<RegistroCumplimiento> historial = cumplimientos.findAll();
 
         solicitud.setPuntajePrioridad(
-                calculadorPrioridad.calcularPuntajeSecundario(
+                calculadorPrioridad.calcularPuntajePrioridad(
                         solicitud, historial
                 )
         );
@@ -254,7 +261,7 @@ public class AsignadorPruebaService {
             }
 
             solicitud.setPuntajePrioridad(
-                    calculadorPrioridad.calcularPuntajeSecundario(
+                    calculadorPrioridad.calcularPuntajePrioridad(
                             solicitud, historial
                     )
             );
@@ -269,8 +276,9 @@ public class AsignadorPruebaService {
 
             if (elegido == null) {
                 // No hay espacio compatible por ahora.
-                // La solicitud permanece pendiente para futuros reintentos
-                // o para que el administrador proponga una alternativa.
+                // Guardamos el puntaje calculado y la solicitud
+                // permanece pendiente para futuros reintentos.
+                solicitudes.save(solicitud);
                 continue;
             }
 
@@ -346,7 +354,7 @@ public class AsignadorPruebaService {
             }
 
             solicitud.setPuntajePrioridad(
-                    calculadorPrioridad.calcularPuntajeSecundario(
+                    calculadorPrioridad.calcularPuntajePrioridad(
                             solicitud, historial
                     )
             );
@@ -359,7 +367,9 @@ public class AsignadorPruebaService {
             );
 
             if (elegido == null) {
-                // No hay espacio por ahora: continúa pendiente.
+                // No hay espacio por ahora.
+                // Guardamos el puntaje y mantenemos la solicitud pendiente.
+                solicitudes.save(solicitud);
                 continue;
             }
 
@@ -441,6 +451,8 @@ public class AsignadorPruebaService {
                         s.getProfesor().getNombre(),
                         s.getMateria().getNombre(),
                         s.getMateria().getAnioCarrera(),
+                        s.getCantidadAlumnos(),
+                        s.getMateria().getTipoEspacioFrecuente(),
                         s.getDias().stream()
                                 .map(DayOfWeek::toString)
                                 .collect(Collectors.joining(", ")),
@@ -509,6 +521,8 @@ public class AsignadorPruebaService {
             String profesor,
             String materia,
             int anio,
+            int cantidadAlumnos,
+            String tipoEspacioRequerido,
             String dias,
             LocalTime inicio,
             LocalTime fin,

@@ -39,6 +39,12 @@ public class RegistroCumplimiento {
             );
         }
 
+        if (fecha == null) {
+            throw new IllegalArgumentException(
+                    "El registro debe tener una fecha."
+            );
+        }
+
         if (!esResultadoValido(resultado)) {
             throw new IllegalArgumentException(
                     "El resultado del registro no es válido."

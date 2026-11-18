@@ -163,7 +163,7 @@ class AsignadorPruebaServiceTest {
                 List.of(DayOfWeek.MONDAY),
                 LocalTime.of(14, 0),
                 LocalTime.of(16, 0),
-                Solicitud.EXAMEN_FINAL
+                Solicitud.CLASE_REGULAR
         );
 
         // Primer año solicita después.
@@ -183,7 +183,7 @@ class AsignadorPruebaServiceTest {
         var resultado = asignador.procesarPendientes();
 
         assertEquals(1, resultado.aprobadas());
-        assertEquals(1, resultado.rechazadas());
+        assertEquals(0, resultado.rechazadas());
         assertEquals(1, asignaciones.count());
 
         assertEquals(
@@ -192,6 +192,16 @@ class AsignadorPruebaServiceTest {
                         .getSolicitud()
                         .getProfesor()
                         .getId()
+        );
+
+        Solicitud solicitudTercerAnio = solicitudes.findAll().stream()
+                .filter(s -> s.getProfesor().getId().equals("TEST-P3"))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals(
+                Solicitud.PENDIENTE,
+                solicitudTercerAnio.getEstadoSolicitud()
         );
     }
 
@@ -245,7 +255,14 @@ class AsignadorPruebaServiceTest {
         var resultado = asignador.procesarPendientes();
 
         assertEquals(0, resultado.aprobadas());
-        assertEquals(1, resultado.rechazadas());
+        assertEquals(0, resultado.rechazadas());
         assertTrue(asignaciones.findAll().isEmpty());
+
+        Solicitud solicitud = solicitudes.findAll().get(0);
+
+        assertEquals(
+                Solicitud.PENDIENTE,
+                solicitud.getEstadoSolicitud()
+        );
     }
 }

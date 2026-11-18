@@ -20,31 +20,182 @@
         }
 
         .contenedor {
-            max-width: 1150px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
         h1 {
-            margin-bottom: 8px;
+            margin: 0 0 8px;
+            font-size: 30px;
+        }
+
+        h2 {
+            margin: 0 0 10px;
+            font-size: 22px;
+        }
+
+        h3 {
+            margin: 0 0 16px;
+            font-size: 19px;
         }
 
         .descripcion {
             color: #65717D;
-            margin-bottom: 25px;
+            line-height: 1.5;
+            margin: 0 0 24px;
         }
 
-        .tabla-contenedor {
+        .seccion {
+            margin-top: 28px;
+        }
+
+        .panel {
             background: white;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        /* MENSAJES */
+
+        .mensaje {
+            padding: 13px 16px;
+            border-radius: 9px;
+            margin: 18px 0;
+            font-weight: bold;
+        }
+
+        .mensaje-ok {
+            background: #DDEBD5;
+            color: #355B32;
+        }
+
+        .mensaje-error {
+            background: #F7C8D3;
+            color: #8B3947;
+        }
+
+        /* PROPUESTAS PENDIENTES */
+
+        .propuestas-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .propuesta {
+            background: #FFFCF5;
+            border: 1px solid #E8E0CF;
+            border-left: 5px solid #C7A85B;
             border-radius: 12px;
             padding: 20px;
+        }
+
+        .propuesta h3 {
+            margin-bottom: 14px;
+        }
+
+        .datos-propuesta {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .dato {
+            background: white;
+            border: 1px solid #E8E0CF;
+            border-radius: 8px;
+            padding: 11px;
+            min-width: 0;
+        }
+
+        .dato small {
+            display: block;
+            color: #65717D;
+            margin-bottom: 5px;
+        }
+
+        .dato strong {
+            overflow-wrap: anywhere;
+        }
+
+        .acciones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 11px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-aceptar {
+            background: #DDEBD5;
+            color: #355B32;
+        }
+
+        .btn-aceptar:hover {
+            background: #C8DFC0;
+        }
+
+        .btn-rechazar {
+            background: #F7C8D3;
+            color: #8B3947;
+        }
+
+        .btn-rechazar:hover {
+            background: #EDB3C0;
+        }
+
+        /* ESTADOS */
+
+        .estado {
+            display: inline-block;
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .estado-pendiente {
+            background: #FFF0CC;
+            color: #795B16;
+        }
+
+        .estado-aceptada,
+        .estado-aprobada,
+        .estado-activa {
+            background: #DDEBD5;
+            color: #355B32;
+        }
+
+        .estado-rechazada,
+        .estado-cancelada {
+            background: #F7C8D3;
+            color: #8B3947;
+        }
+
+        /* TABLAS */
+
+        .tabla-contenedor {
             overflow-x: auto;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            margin-top: 20px;
         }
 
         table {
             width: 100%;
+            min-width: 700px;
             border-collapse: collapse;
-            min-width: 750px;
         }
 
         th, td {
@@ -56,40 +207,65 @@
         th {
             background: #F7C8D3;
             color: #2D3A47;
+            font-size: 13px;
         }
 
-        tr:last-child td {
+        td {
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #FFFCF5;
+        }
+
+        tbody tr:last-child td {
             border-bottom: none;
         }
 
-        .estado {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
+        /* HISTORIAL DE PROPUESTAS */
+
+        .subseccion {
+            margin-top: 30px;
+            padding-top: 24px;
+            border-top: 1px solid #E8E0CF;
         }
 
-        .activa {
-            background: #DDEBD5;
-            color: #355B32;
+        .historial-propuesta {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            align-items: center;
+            gap: 14px;
+            padding: 15px;
+            border: 1px solid #E8E0CF;
+            border-radius: 9px;
+            margin-top: 12px;
+            background: #FFFCF5;
         }
 
-        .cancelada {
-            background: #F7C8D3;
-            color: #8B3947;
+        .historial-propuesta small {
+            display: block;
+            color: #65717D;
+            margin-bottom: 5px;
+        }
+
+        .historial-propuesta strong {
+            overflow-wrap: anywhere;
         }
 
         .vacio {
             text-align: center;
-            padding: 35px;
+            padding: 30px 15px;
             color: #65717D;
+            background: #FFFCF5;
+            border: 1px dashed #D8CEBA;
+            border-radius: 10px;
+            margin-top: 18px;
         }
 
         .volver {
             display: inline-block;
-            margin-top: 22px;
-            padding: 11px 18px;
+            margin-top: 25px;
+            padding: 12px 19px;
             background: #A9B7C6;
             color: #2D3A47;
             text-decoration: none;
@@ -101,44 +277,44 @@
             background: #91A2B4;
         }
 
-                .propuesta {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        @media (max-width: 800px) {
+            .propuestas-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .historial-propuesta {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
-        .propuesta h3 {
-            margin-top: 0;
-        }
-
-        .propuesta p {
-            margin: 8px 0;
-        }
-
-        .estado-pendiente {
-            background: #FFF0CC;
-            color: #795B16;
-        }
-
-        .estado-aceptada {
-            background: #DDEBD5;
-            color: #355B32;
-        }
-
-        .estado-rechazada {
-            background: #F7C8D3;
-            color: #8B3947;
-        }
-
-        @media (max-width: 600px) {
+        @media (max-width: 550px) {
             body {
                 padding: 15px;
             }
 
-            .tabla-contenedor {
-                padding: 10px;
+            .panel {
+                padding: 17px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+            .datos-propuesta {
+                grid-template-columns: 1fr;
+            }
+
+            .historial-propuesta {
+                grid-template-columns: 1fr;
+            }
+
+            .acciones {
+                flex-direction: column;
+            }
+
+            .acciones form,
+            .acciones button {
+                width: 100%;
             }
         }
     </style>
@@ -147,154 +323,264 @@
 <body>
 <div class="contenedor">
 
-    <h1 th:text="${esAdministrador ? 'Asignaciones de espacios' : 'Mis asignaciones'}">
+    <!-- ENCABEZADO -->
+    <h1 th:text="${esAdministrador
+            ? 'Asignaciones de espacios'
+            : 'Mis asignaciones'}">
         Mis asignaciones
     </h1>
 
-    <p th:if="${ok}"
-       class="estado estado-aceptada"
-       th:text="${ok}">
-    </p>
-
-    <p th:if="${error}"
-       class="estado estado-rechazada"
-       th:text="${error}">
-    </p>
-
     <p class="descripcion"
        th:text="${esAdministrador
-            ? 'Consulta de todas las asignaciones generadas por el sistema.'
-            : 'Estos son los espacios asignados a tus materias para el cuatrimestre.'}">
+            ? 'Consulta de todas las solicitudes y asignaciones registradas en el sistema.'
+            : 'Consultá el estado de tus solicitudes y los espacios asignados a tus materias.'}">
         Consulta de asignaciones.
     </p>
 
-    <!-- PROPUESTAS ALTERNATIVAS PARA EL PROFESOR -->
-    <section th:if="${not esAdministrador}">
-        <h2>Propuestas alternativas</h2>
+    <!-- MENSAJES -->
+    <div th:if="${ok}"
+         class="mensaje mensaje-ok"
+         th:text="${ok}">
+    </div>
 
-        <p>
-            Aquí podés consultar las alternativas de espacio,
-            días y horarios que te propone el administrador.
-        </p>
+    <div th:if="${error}"
+         class="mensaje mensaje-error"
+         th:text="${error}">
+    </div>
 
-        <div th:if="${#lists.isEmpty(propuestas)}" class="vacio">
-            No tenés propuestas alternativas por el momento.
+    <!-- PROPUESTAS PENDIENTES DEL PROFESOR -->
+    <section class="seccion"
+             th:if="${not esAdministrador}">
+
+        <div class="panel">
+
+            <h2>Propuestas alternativas</h2>
+
+            <p class="descripcion">
+                Estas son las alternativas de espacio, días y horarios
+                que te propuso el administrador. Podés aceptar o rechazar
+                cada una.
+            </p>
+
+            <div th:if="${#lists.isEmpty(propuestas)}"
+                 class="vacio">
+                No tenés propuestas pendientes de respuesta.
+            </div>
+
+            <div class="propuestas-grid"
+                 th:unless="${#lists.isEmpty(propuestas)}">
+
+                <article class="propuesta"
+                         th:each="p : ${propuestas}">
+
+                    <h3 th:text="${p.solicitud.materia.nombre}">
+                        Materia
+                    </h3>
+
+                    <span class="estado estado-pendiente">
+                        Pendiente de respuesta
+                    </span>
+
+                    <div class="datos-propuesta">
+
+                        <div class="dato">
+                            <small>Espacio propuesto</small>
+                            <strong th:text="${p.espacio.nombre}">
+                                Aula
+                            </strong>
+                        </div>
+
+                        <div class="dato">
+                            <small>Días propuestos</small>
+                            <strong th:text="${p.diasPropuestos}">
+                                Días
+                            </strong>
+                        </div>
+
+                        <div class="dato">
+                            <small>Hora de inicio</small>
+                            <strong th:text="${p.horaInicio}">
+                                08:00
+                            </strong>
+                        </div>
+
+                        <div class="dato">
+                            <small>Hora de finalización</small>
+                            <strong th:text="${p.horaFin}">
+                                10:00
+                            </strong>
+                        </div>
+
+                    </div>
+
+                    <div class="acciones">
+
+                        <form th:action="@{/propuestas/{id}/aceptar(id=${p.id})}"
+                              method="post">
+
+                            <button type="submit"
+                                    class="btn-aceptar">
+                                Aceptar propuesta
+                            </button>
+                        </form>
+
+                        <form th:action="@{/propuestas/{id}/rechazar(id=${p.id})}"
+                              method="post">
+
+                            <button type="submit"
+                                    class="btn-rechazar">
+                                Rechazar propuesta
+                            </button>
+                        </form>
+
+                    </div>
+
+                </article>
+
+            </div>
         </div>
+    </section>
 
-        <article class="propuesta" th:each="p : ${propuestas}">
+    <!-- HISTORIAL GENERAL -->
+    <section class="seccion">
 
-            <h3 th:text="${p.solicitud.materia.nombre}">
-                Materia
-            </h3>
+        <div class="panel">
 
-            <p>
-                <strong>Espacio propuesto:</strong>
-                <span th:text="${p.espacio.nombre}"></span>
+            <h2 th:text="${esAdministrador
+                    ? 'Todas las solicitudes'
+                    : 'Todas mis solicitudes'}">
+                Todas mis solicitudes
+            </h2>
+
+            <p class="descripcion">
+                Acá se conserva el registro de todas las solicitudes,
+                independientemente de su estado actual.
             </p>
 
-            <p>
-                <strong>Días propuestos:</strong>
-                <span th:text="${p.diasPropuestos}"></span>
-            </p>
+            <div class="tabla-contenedor">
 
-            <p>
-                <strong>Horario:</strong>
-                <span th:text="${p.horaInicio}"></span>
-                -
-                <span th:text="${p.horaFin}"></span>
-            </p>
+                <table>
+                    <thead>
+                    <tr>
+                        <th th:if="${esAdministrador}">Profesor</th>
+                        <th>Materia</th>
+                        <th>Aula asignada</th>
+                        <th>Días solicitados</th>
+                        <th>Horario solicitado</th>
+                        <th>Estado de solicitud</th>
+                    </tr>
+                    </thead>
 
-            <p>
-                <strong>Estado:</strong>
+                    <tbody>
 
-                <span class="estado"
-                      th:classappend="| estado-${#strings.toLowerCase(p.estado)}|"
-                      th:text="${p.estado}">
-                </span>
-            </p>
+                    <tr th:each="solicitud : ${solicitudes}">
 
-            <!-- RESPUESTA DEL PROFESOR -->
-            <div th:if="${p.estado == 'PENDIENTE'}">
+                        <td th:if="${esAdministrador}"
+                            th:text="${solicitud.profesor}">
+                            Profesor
+                        </td>
 
-                <form th:action="@{/propuestas/{id}/aceptar(id=${p.id})}"
-                      method="post"
-                      style="display:inline-block; margin-right:8px;">
+                        <td th:text="${solicitud.materia}">
+                            Materia
+                        </td>
 
-                    <button type="submit">
-                        Aceptar propuesta
-                    </button>
-                </form>
+                        <td th:text="${solicitud.aula}">
+                            -
+                        </td>
 
-                <form th:action="@{/propuestas/{id}/rechazar(id=${p.id})}"
-                      method="post"
-                      style="display:inline-block;">
+                        <td th:text="${solicitud.dias}">
+                            Días
+                        </td>
 
-                    <button type="submit"
-                            style="background:#B46A72;">
-                        Rechazar propuesta
-                    </button>
-                </form>
+                        <td>
+                            <span th:text="${solicitud.inicio}">08:00</span>
+                            -
+                            <span th:text="${solicitud.fin}">10:00</span>
+                        </td>
+
+                        <td>
+                            <span class="estado"
+                                  th:classappend="| estado-${#strings.toLowerCase(solicitud.estado)}|"
+                                  th:text="${solicitud.estado}">
+                                PENDIENTE
+                            </span>
+                        </td>
+
+                    </tr>
+
+                    <tr th:if="${#lists.isEmpty(solicitudes)}">
+                        <td class="vacio"
+                            th:attr="colspan=${esAdministrador ? 6 : 5}">
+                            Todavía no hay solicitudes registradas.
+                        </td>
+                    </tr>
+
+                    </tbody>
+                </table>
 
             </div>
 
-        </article>
+            <!-- HISTORIAL DE PROPUESTAS RESPONDIDAS -->
+            <div class="subseccion"
+                 th:if="${not esAdministrador}">
+
+                <h2>Historial de propuestas alternativas</h2>
+
+                <p class="descripcion">
+                    Acá podés consultar las alternativas que ya respondiste.
+                    Las propuestas rechazadas no eliminan ni modifican
+                    tu solicitud original.
+                </p>
+
+                <div th:if="${#lists.isEmpty(historialPropuestas)}"
+                     class="vacio">
+                    Todavía no respondiste ninguna propuesta alternativa.
+                </div>
+
+                <article class="historial-propuesta"
+                         th:each="p : ${historialPropuestas}">
+
+                    <div>
+                        <small>Materia</small>
+                        <strong th:text="${p.solicitud.materia.nombre}">
+                            Materia
+                        </strong>
+                    </div>
+
+                    <div>
+                        <small>Espacio propuesto</small>
+                        <strong th:text="${p.espacio.nombre}">
+                            Aula
+                        </strong>
+                    </div>
+
+                    <div>
+                        <small>Horario propuesto</small>
+                        <strong>
+                            <span th:text="${p.horaInicio}">08:00</span>
+                            -
+                            <span th:text="${p.horaFin}">10:00</span>
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span class="estado"
+                              th:classappend="| estado-${#strings.toLowerCase(p.estado)}|"
+                              th:text="${p.estado}">
+                            ACEPTADA
+                        </span>
+                    </div>
+
+                </article>
+
+            </div>
+
+        </div>
     </section>
 
-    <div class="tabla-contenedor">
-
-        <table>
-            <thead>
-            <tr>
-                <th th:if="${esAdministrador}">Profesor</th>
-                <th>Materia</th>
-                <th>Aula</th>
-                <th>Días</th>
-                <th>Horario</th>
-                <th>Estado</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            <tr th:each="asignacion : ${asignaciones}">
-
-                <td th:if="${esAdministrador}"
-                    th:text="${asignacion.profesor}">
-                    Profesor
-                </td>
-
-                <td th:text="${asignacion.materia}">Materia</td>
-
-                <td th:text="${asignacion.aula}">Aula</td>
-
-                <td th:text="${asignacion.dias}">Días</td>
-
-                <td>
-                    <span th:text="${asignacion.inicio}">08:00</span>
-                    -
-                    <span th:text="${asignacion.fin}">10:00</span>
-                </td>
-
-                <td>
-                    <span class="estado"
-                          th:classappend="${#strings.toLowerCase(asignacion.estado)}"
-                          th:text="${asignacion.estado}">
-                        ACTIVA
-                    </span>
-                </td>
-
-            </tr>
-
-            <tr th:if="${#lists.isEmpty(asignaciones)}">
-                <td colspan="6" class="vacio">
-                    Todavía no hay asignaciones registradas.
-                </td>
-            </tr>
-            </tbody>
-        </table>
-
-    </div>
-
-    <a th:href="@{/}" class="volver">Volver al inicio</a>
+    <a th:href="@{/}" class="volver">
+        Volver al inicio
+    </a>
 
 </div>
 </body>

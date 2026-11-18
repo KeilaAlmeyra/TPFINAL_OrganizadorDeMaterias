@@ -11,6 +11,7 @@ import organizador.servicios.GestorEspacios;
 import organizador.servicios.GestorPropuestas;
 
 
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -80,14 +81,6 @@ public class AsignadorPruebaController {
         model.addAttribute("esAdministrador", esAdministrador);
         model.addAttribute("usuario", usuario);
 
-        model.addAttribute("actividades", List.of(
-                Solicitud.EXAMEN_FINAL,
-                Solicitud.PARCIAL,
-                Solicitud.RECUPERATORIO,
-                Solicitud.CLASE_OBLIGATORIA,
-                Solicitud.CLASE_REGULAR
-        ));
-
         if (esAdministrador) {
 
             model.addAttribute(
@@ -108,6 +101,38 @@ public class AsignadorPruebaController {
     }
 
 
+
+    @GetMapping("/materias-pendientes")
+    public String mostrarMateriasPendientes(
+            Authentication authentication,
+            Model model) {
+
+        Usuario usuario = obtenerUsuarioActual(authentication);
+
+        if (!usuario.esAdministrador()) {
+            return "redirect:/";
+        }
+
+        model.addAttribute(
+                "solicitudesPendientes",
+                asignador.obtenerResultados(usuario.getId(), true)
+                        .stream()
+                        .filter(s -> Solicitud.PENDIENTE.equals(s.estado()))
+                        .toList()
+        );
+
+        model.addAttribute(
+                "espaciosDisponibles",
+                gestorEspacios.obtenerDisponibles()
+        );
+
+        model.addAttribute("esAdministrador", true);
+        model.addAttribute("usuario", usuario);
+
+        return "materias-pendientes";
+    }
+
+
     @GetMapping("/mis-asignaciones")
     public String mostrarMisAsignaciones(
             Authentication authentication,
@@ -116,20 +141,25 @@ public class AsignadorPruebaController {
         Usuario usuario = obtenerUsuarioActual(authentication);
         boolean esAdministrador = usuario.esAdministrador();
 
-        model.addAttribute(
-                "asignaciones",
-                asignador.obtenerAsignaciones(
-                        usuario.getId(),
-                        esAdministrador
-                )
-        );
+        model.addAttribute("asignaciones",
+                asignador.obtenerAsignaciones(usuario.getId(), esAdministrador));
 
-        model.addAttribute(
-                "propuestas",
+        model.addAttribute("solicitudes",
+                asignador.obtenerResultados(usuario.getId(), esAdministrador));
+
+        // Propuestas que el profesor todavía puede responder.
+        model.addAttribute("propuestas",
                 esAdministrador
                         ? List.of()
-                        : gestorPropuestas.obtenerPropuestasProfesor(usuario.getId())
-        );
+                        : gestorPropuestas.obtenerPropuestasPendientesProfesor(
+                        usuario.getId()));
+
+        // Propuestas que ya fueron aceptadas o rechazadas.
+        model.addAttribute("historialPropuestas",
+                esAdministrador
+                        ? List.of()
+                        : gestorPropuestas.obtenerHistorialPropuestasProfesor(
+                        usuario.getId()));
 
         model.addAttribute("esAdministrador", esAdministrador);
         model.addAttribute("usuario", usuario);
@@ -137,7 +167,30 @@ public class AsignadorPruebaController {
         return "mis-asignaciones";
     }
 
+    /**
+     * Devuelve los horarios disponibles para una propuesta alternativa.
+     */
+    @GetMapping("/propuestas/horarios-disponibles")
+    @ResponseBody
+    public List<GestorPropuestas.HorarioDisponible> obtenerHorariosDisponibles(
+            Authentication authentication,
+            @RequestParam String solicitudId,
+            @RequestParam String espacioId,
+            @RequestParam(required = false) List<DayOfWeek> dias) {
 
+        Usuario usuario = obtenerUsuarioActual(authentication);
+
+        if (!usuario.esAdministrador()) {
+            throw new IllegalArgumentException(
+                    "No tenés permiso para consultar estos horarios.");
+        }
+
+        return gestorPropuestas.obtenerHorariosDisponibles(
+                solicitudId,
+                espacioId,
+                dias
+        );
+    }
     @PostMapping("/propuestas/crear")
     public String crearPropuesta(
             Authentication authentication,
@@ -153,6 +206,7 @@ public class AsignadorPruebaController {
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaFin,
+            @RequestParam(required = false) String origen,
 
             RedirectAttributes mensajes) {
 
@@ -178,6 +232,10 @@ public class AsignadorPruebaController {
 
         } catch (IllegalArgumentException | IllegalStateException e) {
             mensajes.addFlashAttribute("error", e.getMessage());
+        }
+
+        if ("solicitudes-pendientes".equals(origen)) {
+            return "redirect:/solicitudes-pendientes";
         }
 
         return "redirect:/prueba-asignaciones";
@@ -242,6 +300,85 @@ public class AsignadorPruebaController {
         return "redirect:/mis-asignaciones";
     }
 
+    /**
+     * Cancela una propuesta alternativa enviada al profesor.
+     */
+    @PostMapping("/propuestas/{id}/cancelar")
+    public String cancelarPropuesta(
+            @PathVariable String id,
+            Authentication authentication,
+            RedirectAttributes mensajes) {
+
+        try {
+            Usuario usuario = obtenerUsuarioActual(authentication);
+
+            if (!usuario.esAdministrador()) {
+                throw new IllegalArgumentException(
+                        "No tenés permiso para cancelar propuestas.");
+            }
+
+            gestorPropuestas.cancelarPropuesta(id);
+
+            mensajes.addFlashAttribute(
+                    "ok",
+                    "Propuesta cancelada. La solicitud volvió a estar disponible."
+            );
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/solicitudes-pendientes";
+    }
+
+    /**
+     * Edita una propuesta pendiente enviada al profesor.
+     */
+    @PostMapping("/propuestas/{id}/editar")
+    public String editarPropuesta(
+            @PathVariable String id,
+            Authentication authentication,
+
+            @RequestParam String espacioId,
+            @RequestParam(required = false) List<DayOfWeek> dias,
+
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+            LocalTime horaInicio,
+
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+            LocalTime horaFin,
+
+            RedirectAttributes mensajes) {
+
+        try {
+            Usuario usuario = obtenerUsuarioActual(authentication);
+
+            if (!usuario.esAdministrador()) {
+                throw new IllegalArgumentException(
+                        "No tenés permiso para editar propuestas.");
+            }
+
+            gestorPropuestas.editarPropuesta(
+                    id,
+                    espacioId,
+                    dias,
+                    horaInicio,
+                    horaFin
+            );
+
+            mensajes.addFlashAttribute(
+                    "ok",
+                    "Propuesta modificada correctamente."
+            );
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/solicitudes-pendientes";
+    }
     @PostMapping("/prueba-asignaciones/solicitar")
     public String solicitar(
             Authentication authentication,
@@ -258,8 +395,6 @@ public class AsignadorPruebaController {
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaFin,
-
-            @RequestParam String tipoActividad,
             RedirectAttributes mensajes) {
 
         try {
@@ -284,7 +419,7 @@ public class AsignadorPruebaController {
                     dias,
                     horaInicio,
                     horaFin,
-                    tipoActividad
+                    Solicitud.CLASE_REGULAR
             );
 
             if (modo == ModoFuncionamiento.RECEPCION_SOLICITUDES) {

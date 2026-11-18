@@ -21,14 +21,28 @@ public class SeguridadConfig {
             throws Exception {
 
         http
+                // Permite utilizar la consola H2 durante la revisión local.
+                .csrf(csrf ->
+                        csrf.ignoringRequestMatchers("/h2-console/**")
+                )
+
+                // Permite que la consola H2 se muestre dentro de un frame.
+                .headers(headers ->
+                        headers.frameOptions(frame ->
+                                frame.sameOrigin()
+                        )
+                )
+
                 .authorizeHttpRequests(autorizacion -> autorizacion
 
+                        // Recursos públicos y consola H2.
                         .requestMatchers(
                                 "/login",
                                 "/css/**",
                                 "/js/**",
                                 "/imagenes/**",
-                                "/favicon.ico"
+                                "/favicon.ico",
+                                "/h2-console/**"
                         ).permitAll()
 
                         // Acciones exclusivas del administrador.
@@ -58,11 +72,13 @@ public class SeguridadConfig {
 
                         .anyRequest().authenticated()
                 )
+
                 .formLogin(formulario -> formulario
                         .loginPage("/login")
                         .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
+
                 .logout(cierre -> cierre
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()

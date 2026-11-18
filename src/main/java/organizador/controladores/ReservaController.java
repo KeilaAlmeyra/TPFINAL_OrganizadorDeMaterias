@@ -5,6 +5,15 @@ import organizador.modelos.Usuario;
 import organizador.repositorios.UsuarioRepository;
 import organizador.servicios.GestorEspacios;
 import organizador.servicios.ReservaService;
+import organizador.modelos.Solicitud;
+import organizador.servicios.AsignadorPruebaService;
+import organizador.modelos.Espacio;
+import organizador.servicios.GestorPropuestas;
+import organizador.modelos.PropuestaAsignacion;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
@@ -26,14 +35,21 @@ public class ReservaController {
     private final UsuarioRepository usuarioRepository;
     private final GestorEspacios gestorEspacios;
 
+    private final AsignadorPruebaService asignadorPruebaService;
+    private final GestorPropuestas gestorPropuestas;
+
     public ReservaController(
             ReservaService reservaService,
             UsuarioRepository usuarioRepository,
-            GestorEspacios gestorEspacios) {
+            GestorEspacios gestorEspacios,
+            AsignadorPruebaService asignadorPruebaService,
+            GestorPropuestas gestorPropuestas) {
 
         this.reservaService = reservaService;
         this.usuarioRepository = usuarioRepository;
         this.gestorEspacios = gestorEspacios;
+        this.asignadorPruebaService = asignadorPruebaService;
+        this.gestorPropuestas = gestorPropuestas;
     }
 
     // Muestra el formulario para crear una reserva.
@@ -162,9 +178,76 @@ public class ReservaController {
             return "redirect:/";
         }
 
+        // Solicitudes de reservas puntuales.
         model.addAttribute(
                 "solicitudes",
                 reservaService.listarPendientes()
+        );
+
+        // Solicitudes de asignación de aulas que siguen pendientes.
+        List<AsignadorPruebaService.FilaSolicitud> todasLasPendientes =
+                asignadorPruebaService.obtenerResultados(usuario.getId(), true)
+                        .stream()
+                        .filter(s -> Solicitud.PENDIENTE.equals(s.estado()))
+                        .toList();
+
+// Propuestas que ya fueron enviadas y esperan respuesta.
+        List<PropuestaAsignacion> propuestasPendientes =
+                gestorPropuestas.obtenerTodasLasPropuestasPendientes();
+
+// Identificamos las solicitudes que ya tienen una propuesta pendiente.
+        List<String> solicitudesConPropuesta =
+                propuestasPendientes.stream()
+                        .map(p -> p.getSolicitud().getId())
+                        .toList();
+
+// Solo mostramos para proponer aquellas solicitudes
+// que todavía no tienen una propuesta esperando respuesta.
+        List<AsignadorPruebaService.FilaSolicitud> pendientes =
+                todasLasPendientes.stream()
+                        .filter(s -> !solicitudesConPropuesta.contains(s.id()))
+                        .toList();
+
+        model.addAttribute(
+                "solicitudesAsignacionPendientes",
+                pendientes
+        );
+
+// Enviamos las propuestas pendientes a la segunda sección.
+        model.addAttribute(
+                "propuestasEsperandoRespuesta",
+                propuestasPendientes
+        );
+
+// Cada solicitud disponible para proponer recibe sus espacios compatibles.
+        Map<String, List<Espacio>> espaciosPorSolicitud = new HashMap<>();
+
+        for (AsignadorPruebaService.FilaSolicitud solicitud : pendientes) {
+            espaciosPorSolicitud.put(
+                    solicitud.id(),
+                    gestorPropuestas.obtenerEspaciosCompatibles(solicitud.id())
+            );
+        }
+
+        model.addAttribute("espaciosPorSolicitud", espaciosPorSolicitud);
+
+// Espacios compatibles para editar cada propuesta pendiente.
+        Map<String, List<Espacio>> espaciosPorPropuesta = new HashMap<>();
+
+        for (PropuestaAsignacion propuesta : propuestasPendientes) {
+            espaciosPorPropuesta.put(
+                    propuesta.getId(),
+                    gestorPropuestas.obtenerEspaciosCompatibles(
+                            propuesta.getSolicitud().getId()
+                    )
+            );
+        }
+
+        model.addAttribute("espaciosPorPropuesta", espaciosPorPropuesta);
+        // Espacios disponibles para proponer alternativas.
+        model.addAttribute(
+                "espaciosDisponibles",
+                gestorEspacios.obtenerDisponibles()
         );
 
         return "solicitudes-pendientes";

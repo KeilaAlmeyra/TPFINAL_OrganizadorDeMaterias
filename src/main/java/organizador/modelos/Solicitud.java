@@ -221,9 +221,9 @@ public class Solicitud {
      */
     public void setPuntajePrioridad(double puntajePrioridad) {
 
-        if (puntajePrioridad < 0 || puntajePrioridad > 85) {
+        if (puntajePrioridad < 0 || puntajePrioridad > 75) {
             throw new IllegalArgumentException(
-                    "El puntaje debe estar entre 0 y 85."
+                    "El puntaje debe estar entre 0 y 75."
             );
         }
 

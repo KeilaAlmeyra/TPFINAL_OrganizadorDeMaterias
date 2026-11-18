@@ -1,3 +1,4 @@
+
 package organizador.servicios;
 
 import organizador.modelos.Solicitud;
@@ -8,7 +9,6 @@ import java.util.Comparator;
 import java.util.List;
 
 @Service
-
 /**
  * Calcula y ordena las solicitudes según
  * los criterios de prioridad establecidos.
@@ -19,10 +19,10 @@ public class CalculadorPrioridad {
     private static final int MIN_REGISTROS = 3;
 
     /**
-     * Calcula el puntaje secundario de una solicitud.
-     * El máximo es 85 puntos.
+     * Calcula el puntaje total de prioridad.
+     * El máximo es 75 puntos.
      */
-    public double calcularPuntajeSecundario(
+    public double calcularPuntajePrioridad(
             Solicitud solicitud,
             List<RegistroCumplimiento> historial) {
 
@@ -36,17 +36,17 @@ public class CalculadorPrioridad {
                 solicitud.getCantidadAlumnos()
         );
 
-        double troncal = solicitud.getMateria().esTroncal() ? 15 : 0;
-
-        double actividad = calcularPuntajeActividad(
-                solicitud.getTipoActividad()
+        double anio = calcularPuntajeAnio(
+                solicitud.getMateria().getAnioCarrera()
         );
+
+        double troncal = solicitud.getMateria().esTroncal() ? 15 : 0;
 
         double cumplimiento = calcularPuntajeCumplimiento(
                 solicitud, historial
         );
 
-        return alumnos + troncal + actividad + cumplimiento;
+        return alumnos + anio + troncal + cumplimiento;
     }
 
     /**
@@ -63,19 +63,18 @@ public class CalculadorPrioridad {
     }
 
     /**
-     * Asigna puntos según el tipo de actividad.
+     * Asigna puntos según el año de carrera.
+     * Los años inferiores reciben mayor puntaje,
+     * pero el año no determina por sí solo el orden.
      */
-    private double calcularPuntajeActividad(String actividad) {
+    private double calcularPuntajeAnio(int anio) {
 
-        if (actividad == null) return 0;
-
-        return switch (actividad) {
-            case Solicitud.EXAMEN_FINAL -> 25;
-            case Solicitud.PARCIAL -> 22;
-            case Solicitud.RECUPERATORIO -> 20;
-            case Solicitud.CLASE_OBLIGATORIA -> 15;
-            case Solicitud.CLASE_REGULAR -> 10;
-            default -> 0;
+        return switch (anio) {
+            case 1 -> 15;
+            case 2 -> 12;
+            case 3 -> 9;
+            case 4 -> 6;
+            default -> anio >= 5 ? 3 : 0;
         };
     }
 
@@ -94,7 +93,6 @@ public class CalculadorPrioridad {
             return 20;
         }
 
-        // Obtenemos los registros del profesor de esta solicitud.
         List<RegistroCumplimiento> registros = historial.stream()
                 .filter(registro ->
                         registro.getAsignacion()
@@ -112,12 +110,10 @@ public class CalculadorPrioridad {
                 .limit(MAX_REGISTROS)
                 .toList();
 
-        // No penalizamos si hay pocos antecedentes.
         if (registros.size() < MIN_REGISTROS) {
             return 20;
         }
 
-        // Contamos cuántos registros fueron cumplidos.
         long cumplidos = registros.stream()
                 .filter(registro -> !registro.esIncumplimiento())
                 .count();
@@ -125,13 +121,12 @@ public class CalculadorPrioridad {
         double porcentaje =
                 (double) cumplidos / registros.size() * 100;
 
-        // Convertimos el porcentaje a un máximo de 20 puntos.
         return porcentaje * 0.20;
     }
 
     /**
-     * Ordena las solicitudes:
-     * primero por año de carrera y después por puntaje.
+     * Ordena todas las solicitudes por puntaje total,
+     * de mayor a menor.
      */
     public List<Solicitud> ordenarSolicitudes(
             List<Solicitud> solicitudes,
@@ -139,20 +134,13 @@ public class CalculadorPrioridad {
 
         return solicitudes.stream()
                 .sorted(
-                        Comparator.comparingInt(
-                                        (Solicitud s) ->
-                                                s.getMateria().getAnioCarrera()
-                                )
-                                .thenComparing(
-                                        Comparator.comparingDouble(
-                                                (Solicitud s) ->
-                                                        calcularPuntajeSecundario(
-                                                                s, historial
-                                                        )
-                                        ).reversed()
-                                )
+                        Comparator.comparingDouble(
+                                (Solicitud s) ->
+                                        calcularPuntajePrioridad(
+                                                s, historial
+                                        )
+                        ).reversed()
                 )
                 .toList();
     }
 }
-

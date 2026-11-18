@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
+import java.util.ArrayList;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
@@ -23,6 +23,8 @@ public class PropuestaAsignacion {
     public static final String PENDIENTE = "PENDIENTE";
     public static final String ACEPTADA = "ACEPTADA";
     public static final String RECHAZADA = "RECHAZADA";
+
+    public static final String CANCELADA = "CANCELADA";
 
     @Id
     private String id;
@@ -90,7 +92,7 @@ public class PropuestaAsignacion {
         this.id = id;
         this.solicitud = solicitud;
         this.espacio = espacio;
-        this.diasPropuestos = List.copyOf(diasPropuestos);
+        this.diasPropuestos = new ArrayList<>(diasPropuestos);
         this.horaInicio = horaInicio;
         this.horaFin = horaFin;
         this.estado = PENDIENTE;
@@ -136,6 +138,10 @@ public class PropuestaAsignacion {
         return RECHAZADA.equals(estado);
     }
 
+    public boolean estaCancelada() {
+        return CANCELADA.equals(estado);
+    }
+
     public void aceptar() {
         verificarPendiente();
         estado = ACEPTADA;
@@ -144,6 +150,46 @@ public class PropuestaAsignacion {
     public void rechazar() {
         verificarPendiente();
         estado = RECHAZADA;
+    }
+
+    public void cancelar() {
+        verificarPendiente();
+        estado = CANCELADA;
+    }
+
+    public void actualizar(
+            Espacio espacio,
+            List<DayOfWeek> diasPropuestos,
+            LocalTime horaInicio,
+            LocalTime horaFin) {
+
+        verificarPendiente();
+
+        if (espacio == null) {
+            throw new IllegalArgumentException(
+                    "Debe seleccionar un espacio.");
+        }
+
+        if (diasPropuestos == null || diasPropuestos.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Debe seleccionar al menos un día.");
+        }
+
+        if (horaInicio == null || horaFin == null
+                || !horaFin.isAfter(horaInicio)) {
+            throw new IllegalArgumentException(
+                    "El horario propuesto no es válido.");
+        }
+
+        this.espacio = espacio;
+
+        List<DayOfWeek> nuevosDias = new ArrayList<>(diasPropuestos);
+
+        this.diasPropuestos.clear();
+        this.diasPropuestos.addAll(nuevosDias);
+
+        this.horaInicio = horaInicio;
+        this.horaFin = horaFin;
     }
 
     private void verificarPendiente() {
