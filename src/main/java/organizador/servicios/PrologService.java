@@ -1,3 +1,4 @@
+
 package organizador.servicios;
 
 import organizador.modelos.Asignacion;
@@ -31,7 +32,6 @@ public class PrologService {
 
     private final String ejecutable;
     private final Path archivoReglas;
-
     private final ConfiguracionService configuracionService;
 
     public PrologService(
@@ -68,10 +68,9 @@ public class PrologService {
                 return espacio;
             }
         }
+
         return null;
     }
-
-
 
     /**
      * Comprueba si un espacio específico está disponible
@@ -88,6 +87,33 @@ public class PrologService {
             List<Asignacion> asignaciones,
             List<Reserva> reservas) {
 
+        return validarDisponibilidadPropuesta(
+                solicitud,
+                espacio,
+                dias,
+                horaInicio,
+                horaFin,
+                asignaciones,
+                reservas,
+                null
+        );
+    }
+
+    /**
+     * Comprueba la disponibilidad excluyendo una asignación existente.
+     * Se utiliza al modificar una asignación para evitar que entre
+     * en conflicto consigo misma.
+     */
+    public boolean validarDisponibilidadPropuesta(
+            Solicitud solicitud,
+            Espacio espacio,
+            List<DayOfWeek> dias,
+            LocalTime horaInicio,
+            LocalTime horaFin,
+            List<Asignacion> asignaciones,
+            List<Reserva> reservas,
+            String idAsignacionExcluir) {
+
         if (solicitud == null || espacio == null
                 || dias == null || dias.isEmpty()
                 || horaInicio == null || horaFin == null
@@ -102,12 +128,16 @@ public class PrologService {
                 reservas,
                 dias,
                 horaInicio,
-                horaFin
+                horaFin,
+                idAsignacionExcluir
         );
 
         return idsDisponibles.contains(espacio.getId());
     }
 
+    /**
+     * Consulta utilizando los días y horarios originales de la solicitud.
+     */
     private List<String> consultarEspacios(
             Solicitud solicitud,
             List<Espacio> espacios,
@@ -121,10 +151,14 @@ public class PrologService {
                 reservas,
                 solicitud.getDias(),
                 solicitud.getHoraInicio(),
-                solicitud.getHoraFin()
+                solicitud.getHoraFin(),
+                null
         );
     }
 
+    /**
+     * Consulta Prolog con días, horarios y una asignación opcionalmente excluida.
+     */
     private List<String> consultarEspacios(
             Solicitud solicitud,
             List<Espacio> espacios,
@@ -132,7 +166,8 @@ public class PrologService {
             List<Reserva> reservas,
             List<DayOfWeek> dias,
             LocalTime horaInicio,
-            LocalTime horaFin) {
+            LocalTime horaFin,
+            String idAsignacionExcluir) {
 
         if (!Files.isRegularFile(archivoReglas)) {
             throw new IllegalStateException(
@@ -140,11 +175,21 @@ public class PrologService {
         }
 
         Path scriptTemporal = null;
+
         try {
-            scriptTemporal = Files.createTempFile("consulta-organizador-", ".pl");
+            scriptTemporal = Files.createTempFile(
+                    "consulta-organizador-", ".pl");
+
             String contenidoScript = construirScript(
-                    solicitud, espacios, asignaciones, reservas,
-                    dias, horaInicio, horaFin);
+                    solicitud,
+                    espacios,
+                    asignaciones,
+                    reservas,
+                    dias,
+                    horaInicio,
+                    horaFin,
+                    idAsignacionExcluir
+            );
 
             Files.writeString(
                     scriptTemporal,
@@ -167,16 +212,20 @@ public class PrologService {
 
             if (!proceso.waitFor(15, TimeUnit.SECONDS)) {
                 proceso.destroyForcibly();
+
                 throw new IllegalStateException(
                         "La consulta a SWI-Prolog superó el tiempo máximo de espera.");
             }
 
             String salida = new String(
-                    proceso.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                    proceso.getInputStream().readAllBytes(),
+                    StandardCharsets.UTF_8
+            );
 
             if (proceso.exitValue() != 0
                     || !salida.contains("__PROLOG_INICIO__")
                     || !salida.contains("__PROLOG_FIN__")) {
+
                 throw new IllegalStateException(
                         "No se pudo ejecutar la consulta Prolog. Verifique SWI-Prolog "
                                 + "y organizador.pl. Detalle: " + salida.trim());
@@ -184,8 +233,10 @@ public class PrologService {
 
             List<String> ids = new ArrayList<>();
             boolean leyendoResultados = false;
+
             for (String linea : salida.split("\\R")) {
                 String valor = linea.trim();
+
                 if ("__PROLOG_INICIO__".equals(valor)) {
                     leyendoResultados = true;
                 } else if ("__PROLOG_FIN__".equals(valor)) {
@@ -194,16 +245,22 @@ public class PrologService {
                     ids.add(valor);
                 }
             }
+
             return ids;
 
         } catch (IOException e) {
             throw new IllegalStateException(
                     "No se pudo iniciar SWI-Prolog. Compruebe la propiedad "
-                            + "prolog.ejecutable. Ruta configurada: " + ejecutable, e);
+                            + "prolog.ejecutable. Ruta configurada: " + ejecutable,
+                    e
+            );
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+
             throw new IllegalStateException(
                     "Se interrumpió la comunicación con SWI-Prolog.", e);
+
         } finally {
             if (scriptTemporal != null) {
                 try {
@@ -215,7 +272,9 @@ public class PrologService {
         }
     }
 
-    /** Construye una consulta autocontenida con una fotografía de los datos de H2. */
+    /**
+     * Construye una consulta autocontenida con una fotografía de los datos de H2.
+     */
     private String construirScript(
             Solicitud solicitud,
             List<Espacio> espacios,
@@ -223,7 +282,8 @@ public class PrologService {
             List<Reserva> reservas,
             List<DayOfWeek> dias,
             LocalTime horaInicio,
-            LocalTime horaFin) {
+            LocalTime horaFin,
+            String idAsignacionExcluir) {
 
         StringBuilder script = new StringBuilder();
         String rutaProlog = archivoReglas.toString().replace("\\", "/");
@@ -231,10 +291,12 @@ public class PrologService {
         script.append(":- consult(")
                 .append(atomo(rutaProlog))
                 .append(").\n");
+
         script.append("main :-\n");
         script.append("    retractall(espacio(_, _, _, _)),\n");
         script.append("    retractall(ocupacion(_, _, _, _)),\n");
 
+        // Registrar los espacios.
         for (Espacio espacio : espacios) {
             script.append("    assertz(espacio(")
                     .append(atomo(espacio.getId())).append(", ")
@@ -244,19 +306,30 @@ public class PrologService {
                     .append(")),\n");
         }
 
+        // Registrar las asignaciones activas, excepto la que se está editando.
         if (asignaciones != null) {
             for (Asignacion asignacion : asignaciones) {
-                if (asignacion == null || !asignacion.estaActiva()) {
+
+                if (asignacion == null
+                        || !asignacion.estaActiva()
+                        || (idAsignacionExcluir != null
+                        && idAsignacionExcluir.equals(asignacion.getId()))) {
                     continue;
                 }
+
                 for (DayOfWeek dia : asignacion.getDiasAsignados()) {
-                    agregarOcupacion(script, asignacion.getEspacio().getId(), dia,
+                    agregarOcupacion(
+                            script,
+                            asignacion.getEspacio().getId(),
+                            dia,
                             asignacion.getHoraInicioAsignada(),
-                            asignacion.getHoraFinAsignada());
+                            asignacion.getHoraFinAsignada()
+                    );
                 }
             }
         }
 
+        // Registrar las reservas directas que todavía ocupan un horario.
         if (reservas != null) {
 
             LocalDate hoy = LocalDate.now();
@@ -284,8 +357,7 @@ public class PrologService {
                     continue;
                 }
 
-                // Si la reserva es hoy, solo considera las que
-                // todavía no terminaron.
+                // Si la reserva es hoy, solo considera las que todavía no terminaron.
                 if (fechaReserva.equals(hoy)
                         && !reserva.getHoraFin().isAfter(ahora)) {
                     continue;
@@ -306,11 +378,16 @@ public class PrologService {
                 .collect(java.util.stream.Collectors.joining(", ", "[", "]"));
 
         script.append("    findall(ID, espacio_disponible_dias(ID, ")
-                .append(atomo(normalizar(solicitud.getMateria().getTipoEspacioFrecuente())))
-                .append(", ").append(solicitud.getCantidadAlumnos())
-                .append(", ").append(diasProlog)
-                .append(", ").append(minutos(horaInicio))
-                .append(", ").append(minutos(horaFin))
+                .append(atomo(normalizar(
+                        solicitud.getMateria().getTipoEspacioFrecuente())))
+                .append(", ")
+                .append(solicitud.getCantidadAlumnos())
+                .append(", ")
+                .append(diasProlog)
+                .append(", ")
+                .append(minutos(horaInicio))
+                .append(", ")
+                .append(minutos(horaFin))
                 .append("), IDs),\n")
                 .append("    writeln('__PROLOG_INICIO__'),\n")
                 .append("    forall(member(ID, IDs), writeln(ID)),\n")
@@ -319,8 +396,13 @@ public class PrologService {
         return script.toString();
     }
 
-    private void agregarOcupacion(StringBuilder script, String idEspacio,
-                                  DayOfWeek dia, LocalTime inicio, LocalTime fin) {
+    private void agregarOcupacion(
+            StringBuilder script,
+            String idEspacio,
+            DayOfWeek dia,
+            LocalTime inicio,
+            LocalTime fin) {
+
         script.append("    assertz(ocupacion(")
                 .append(atomo(idEspacio)).append(", ")
                 .append(atomo(diaProlog(dia))).append(", ")
@@ -333,7 +415,9 @@ public class PrologService {
     }
 
     private String normalizar(String valor) {
-        return valor == null ? "" : valor.trim().toLowerCase(Locale.ROOT);
+        return valor == null
+                ? ""
+                : valor.trim().toLowerCase(Locale.ROOT);
     }
 
     private String diaProlog(DayOfWeek dia) {
@@ -348,14 +432,17 @@ public class PrologService {
         };
     }
 
-    /** Escapa texto para representarlo como átomo Prolog entre comillas simples. */
+    /**
+     * Escapa texto para representarlo como átomo Prolog entre comillas simples.
+     */
     private String atomo(String valor) {
         String seguro = valor == null ? "" : valor;
+
         seguro = seguro.replace("\\", "\\\\")
                 .replace("'", "\\'")
                 .replace("\r", "\\r")
                 .replace("\n", "\\n");
+
         return "'" + seguro + "'";
     }
 }
-

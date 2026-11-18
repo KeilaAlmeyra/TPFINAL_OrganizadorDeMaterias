@@ -1,0 +1,208 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar asignación</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 30px 15px;
+            background: #FFF7E6;
+            color: #2D3A47;
+            font-family: Arial, sans-serif;
+        }
+
+        .contenedor {
+            max-width: 650px;
+            margin: 30px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            color: #163A61;
+            margin-top: 0;
+        }
+
+        .descripcion {
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        .campo {
+            margin-top: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        select, input[type="time"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            border: 1px solid #ccd3dc;
+            border-radius: 7px;
+            font-size: 15px;
+            background: white;
+            color: #2D3A47;
+        }
+
+        .dias {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .dia {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 12px;
+            background: #FFF7E6;
+            border-radius: 7px;
+            font-weight: normal;
+        }
+
+        .dia input {
+            accent-color: #163A61;
+        }
+
+        .horarios {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .acciones {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        button, .volver {
+            border: none;
+            border-radius: 7px;
+            padding: 12px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .guardar {
+            background: #163A61;
+            color: white;
+        }
+
+        .volver {
+            background: #E8E0CF;
+            color: #2D3A47;
+        }
+
+        @media (max-width: 500px) {
+            .horarios {
+                grid-template-columns: 1fr;
+            }
+
+            .contenedor {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <h1>Modificar asignación</h1>
+
+    <p class="descripcion">
+        Modificá el espacio, los días o el horario de esta asignación.
+        Los cambios se guardarán únicamente si no existen conflictos.
+    </p>
+
+    <form th:action="@{/asignaciones/{id}/editar(id=${asignacion.id})}"
+          method="post">
+
+        <div class="campo">
+            <label>Espacio</label>
+
+            <select name="espacioId" required>
+                <option th:each="espacio : ${espaciosDisponibles}"
+                        th:value="${espacio.id}"
+                        th:text="${espacio.nombre}"
+                        th:selected="${espacio.id == asignacion.espacio.id}">
+                    Espacio
+                </option>
+            </select>
+        </div>
+
+        <div class="campo">
+            <label>Días asignados</label>
+
+            <div class="dias">
+                <label class="dia" th:each="dia : ${diasSemana}">
+                    <input type="checkbox"
+                           name="dias"
+                           th:value="${dia}"
+                           th:checked="${asignacion.diasAsignados.contains(dia)}">
+                    <span th:switch="${dia.toString()}">
+                        <span th:case="'MONDAY'">Lunes</span>
+                        <span th:case="'TUESDAY'">Martes</span>
+                        <span th:case="'WEDNESDAY'">Miércoles</span>
+                        <span th:case="'THURSDAY'">Jueves</span>
+                        <span th:case="'FRIDAY'">Viernes</span>
+                        <span th:case="'SATURDAY'">Sábado</span>
+                        <span th:case="'SUNDAY'">Domingo</span>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <div class="horarios">
+            <div class="campo">
+                <label for="horaInicio">Hora de inicio</label>
+                <input type="time"
+                       id="horaInicio"
+                       name="horaInicio"
+                       th:value="${asignacion.horaInicioAsignada}"
+                       required>
+            </div>
+
+            <div class="campo">
+                <label for="horaFin">Hora de finalización</label>
+                <input type="time"
+                       id="horaFin"
+                       name="horaFin"
+                       th:value="${asignacion.horaFinAsignada}"
+                       required>
+            </div>
+        </div>
+
+        <div class="acciones">
+            <button type="submit" class="guardar">
+                Guardar cambios
+            </button>
+
+            <a th:href="@{/mis-asignaciones}" class="volver">
+                Volver
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+</body>
+</html>

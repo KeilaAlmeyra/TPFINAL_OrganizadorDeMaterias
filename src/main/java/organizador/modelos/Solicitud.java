@@ -32,6 +32,9 @@ public class Solicitud {
     public static final String PENDIENTE = "PENDIENTE";
     public static final String APROBADA = "APROBADA";
     public static final String RECHAZADA = "RECHAZADA";
+    public static final String CANCELADA = "CANCELADA";
+
+
 
     // Tipos de actividad académica.
     public static final String EXAMEN_FINAL = "EXAMEN_FINAL";
@@ -198,6 +201,12 @@ public class Solicitud {
         return RECHAZADA.equals(estadoSolicitud);
     }
 
+    public boolean estaCancelada() {
+        return CANCELADA.equals(estadoSolicitud);
+    }
+    /**
+     * Permite cambiar el estado de la solicitud.
+     */
     /**
      * Permite cambiar el estado de la solicitud.
      */
@@ -205,7 +214,8 @@ public class Solicitud {
 
         if (PENDIENTE.equals(nuevoEstado)
                 || APROBADA.equals(nuevoEstado)
-                || RECHAZADA.equals(nuevoEstado)) {
+                || RECHAZADA.equals(nuevoEstado)
+                || CANCELADA.equals(nuevoEstado)) {
 
             this.estadoSolicitud = nuevoEstado;
 

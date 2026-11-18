@@ -96,9 +96,16 @@
             margin-top: 20px;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background-color: var(--verde);
             color: var(--azul);
+        }
+
+        button:disabled {
+            background-color: #A9B7C6;
+            color: #52606D;
+            cursor: not-allowed;
+            opacity: 0.75;
         }
 
         .mensaje {
@@ -144,6 +151,8 @@
 </nav>
 
 <main>
+
+    <!-- CONFIGURACIÓN DE PERÍODOS -->
     <section>
         <h2>Períodos académicos</h2>
 
@@ -155,7 +164,9 @@
             se desarrolla la cursada.
         </p>
 
-        <form method="post" th:action="@{/configuracion}">
+        <form id="formConfiguracion"
+              method="post"
+              th:action="@{/configuracion}">
 
             <h3>Recepción de solicitudes</h3>
 
@@ -218,7 +229,8 @@
         <form th:action="@{/prueba-asignaciones/procesar}"
               method="post">
 
-            <button type="submit">
+            <button type="submit"
+                    th:disabled="${estaEnRecepcion}">
                 Procesar solicitudes pendientes
             </button>
         </form>
@@ -229,21 +241,81 @@
         <h2>Reintentar asignaciones</h2>
 
         <p class="ayuda">
-            Durante la cursada, vuelve a buscar espacios para las
-            solicitudes que todavía no tienen un aula asignada.
-            Las solicitudes sin espacio compatible permanecen pendientes.
+            Vuelve a buscar espacios para las solicitudes que todavía
+            no tienen un aula asignada. Las solicitudes sin espacio
+            compatible permanecen pendientes.
         </p>
 
         <form th:action="@{/prueba-asignaciones/reintentar}"
               method="post">
 
-            <button type="submit">
+            <button type="submit"
+                    th:disabled="${estaEnRecepcion}">
                 Reintentar solicitudes pendientes
             </button>
         </form>
     </section>
 
 </main>
+
+<script>
+    const formulario = document.getElementById("formConfiguracion");
+
+    const inicioRecepcion = document.getElementById("fechaInicioRecepcion");
+    const finRecepcion = document.getElementById("fechaFinRecepcion");
+    const inicioCursada = document.getElementById("fechaInicioCursada");
+    const finCursada = document.getElementById("fechaFinCursada");
+
+    function validarPeriodos() {
+
+        inicioRecepcion.setCustomValidity("");
+        finRecepcion.setCustomValidity("");
+        inicioCursada.setCustomValidity("");
+        finCursada.setCustomValidity("");
+
+        if (inicioRecepcion.value && finRecepcion.value
+                && finRecepcion.value < inicioRecepcion.value) {
+
+            finRecepcion.setCustomValidity(
+                "La finalización de recepción no puede ser anterior a su inicio."
+            );
+        }
+
+        if (inicioCursada.value && finCursada.value
+                && finCursada.value < inicioCursada.value) {
+
+            finCursada.setCustomValidity(
+                "La finalización de cursada no puede ser anterior a su inicio."
+            );
+        }
+
+        if (finRecepcion.value && inicioCursada.value
+                && finRecepcion.value >= inicioCursada.value) {
+
+            inicioCursada.setCustomValidity(
+                "La cursada debe comenzar después de finalizar la recepción."
+            );
+        }
+    }
+
+    formulario.addEventListener("submit", function(evento) {
+
+        validarPeriodos();
+
+        if (!formulario.checkValidity()) {
+            evento.preventDefault();
+            formulario.reportValidity();
+        }
+    });
+
+    formulario.addEventListener("input", function() {
+
+        inicioRecepcion.setCustomValidity("");
+        finRecepcion.setCustomValidity("");
+        inicioCursada.setCustomValidity("");
+        finCursada.setCustomValidity("");
+    });
+</script>
 
 </body>
 </html>

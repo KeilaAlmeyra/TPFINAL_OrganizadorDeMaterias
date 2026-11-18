@@ -14,6 +14,7 @@ import jakarta.persistence.Table;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -114,7 +115,36 @@ public class Asignacion {
         return estadoAsignacion.equals(ACTIVA);
     }
 
+    public void modificar(
+            Espacio espacio,
+            List<DayOfWeek> dias,
+            LocalTime horaInicio,
+            LocalTime horaFin) {
+
+        if (!estaActiva()) {
+            throw new IllegalStateException(
+                    "Solo se pueden modificar asignaciones activas.");
+        }
+
+        if (espacio == null || dias == null || dias.isEmpty()
+                || horaInicio == null || horaFin == null
+                || !horaFin.isAfter(horaInicio)) {
+            throw new IllegalArgumentException(
+                    "Los datos de la asignación no son válidos.");
+        }
+
+        this.espacio = espacio;
+        this.diasAsignados = new ArrayList<>(dias);
+        this.horaInicioAsignada = horaInicio;
+        this.horaFinAsignada = horaFin;
+    }
+
     public void cancelar() {
+        if (!estaActiva()) {
+            throw new IllegalStateException(
+                    "La asignación ya se encuentra cancelada.");
+        }
+
         estadoAsignacion = CANCELADA;
     }
 

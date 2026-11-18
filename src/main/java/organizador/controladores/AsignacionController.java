@@ -6,20 +6,21 @@ import organizador.modelos.Solicitud;
 import organizador.modelos.Usuario;
 import organizador.repositorios.UsuarioRepository;
 import organizador.servicios.AsignadorService;
+import organizador.servicios.ConfiguracionService;
 import organizador.servicios.GestorEspacios;
 import organizador.servicios.GestorPropuestas;
 
-
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.bind.annotation.PathVariable;
+
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
@@ -29,20 +30,22 @@ public class AsignacionController {
 
     private final AsignadorService asignador;
     private final UsuarioRepository usuarios;
-
     private final GestorEspacios gestorEspacios;
     private final GestorPropuestas gestorPropuestas;
+    private final ConfiguracionService configuracionService;
 
     public AsignacionController(
             AsignadorService asignador,
-            UsuarioRepository usuarios, GestorEspacios gestorEspacios,
-            GestorPropuestas gestorPropuestas) {
+            UsuarioRepository usuarios,
+            GestorEspacios gestorEspacios,
+            GestorPropuestas gestorPropuestas,
+            ConfiguracionService configuracionService) {
 
         this.asignador = asignador;
         this.usuarios = usuarios;
         this.gestorEspacios = gestorEspacios;
         this.gestorPropuestas = gestorPropuestas;
-
+        this.configuracionService = configuracionService;
     }
 
     private Usuario obtenerUsuarioActual(Authentication authentication) {
@@ -69,6 +72,7 @@ public class AsignacionController {
         );
 
         model.addAttribute("materias", asignador.obtenerMaterias());
+
         model.addAttribute(
                 "solicitudes",
                 asignador.obtenerResultados(usuario.getId(), esAdministrador)
@@ -95,8 +99,6 @@ public class AsignacionController {
 
         return "asignaciones";
     }
-
-
 
     @GetMapping("/materias-pendientes")
     public String mostrarMateriasPendientes(
@@ -128,7 +130,6 @@ public class AsignacionController {
         return "materias-pendientes";
     }
 
-
     @GetMapping("/mis-asignaciones")
     public String mostrarMisAsignaciones(
             Authentication authentication,
@@ -137,31 +138,152 @@ public class AsignacionController {
         Usuario usuario = obtenerUsuarioActual(authentication);
         boolean esAdministrador = usuario.esAdministrador();
 
-        model.addAttribute("asignaciones",
-                asignador.obtenerAsignaciones(usuario.getId(), esAdministrador));
+        model.addAttribute(
+                "asignaciones",
+                asignador.obtenerAsignaciones(usuario.getId(), esAdministrador)
+        );
 
-        model.addAttribute("solicitudes",
-                asignador.obtenerResultados(usuario.getId(), esAdministrador));
+        model.addAttribute(
+                "solicitudes",
+                asignador.obtenerResultados(usuario.getId(), esAdministrador)
+        );
 
-        // Propuestas que el profesor todavía puede responder.
-        model.addAttribute("propuestas",
+        // Solo se muestran las propuestas que el profesor todavía puede responder.
+        model.addAttribute(
+                "propuestas",
                 esAdministrador
                         ? List.of()
                         : gestorPropuestas.obtenerPropuestasPendientesProfesor(
-                        usuario.getId()));
-
-        // Propuestas que ya fueron aceptadas o rechazadas.
-        model.addAttribute("historialPropuestas",
-                esAdministrador
-                        ? List.of()
-                        : gestorPropuestas.obtenerHistorialPropuestasProfesor(
-                        usuario.getId()));
+                        usuario.getId())
+        );
 
         model.addAttribute("esAdministrador", esAdministrador);
         model.addAttribute("usuario", usuario);
 
         return "mis-asignaciones";
     }
+
+
+
+    /**
+     * Muestra el formulario para modificar una asignación.
+     */
+    @GetMapping("/asignaciones/{id}/editar")
+    public String mostrarFormularioEditarAsignacion(
+            @PathVariable String id,
+            Authentication authentication,
+            Model model,
+            RedirectAttributes mensajes) {
+
+        try {
+            Usuario usuario = obtenerUsuarioActual(authentication);
+
+            if (!usuario.esAdministrador()) {
+                mensajes.addFlashAttribute(
+                        "error",
+                        "No tenés permiso para modificar asignaciones."
+                );
+                return "redirect:/mis-asignaciones";
+            }
+
+            model.addAttribute(
+                    "asignacion",
+                    asignador.obtenerAsignacionParaEditar(id)
+            );
+
+            model.addAttribute(
+                    "espaciosDisponibles",
+                    gestorEspacios.obtenerDisponibles()
+            );
+
+            model.addAttribute("diasSemana", DayOfWeek.values());
+
+            return "editar-asignacion";
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/mis-asignaciones";
+        }
+    }
+
+    /**
+     * Modifica una asignación aprobada.
+     */
+    @PostMapping("/asignaciones/{id}/editar")
+    public String editarAsignacion(
+            @PathVariable String id,
+            Authentication authentication,
+            @RequestParam String espacioId,
+            @RequestParam(required = false) List<DayOfWeek> dias,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+            LocalTime horaInicio,
+            @RequestParam
+            @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
+            LocalTime horaFin,
+            RedirectAttributes mensajes) {
+
+        try {
+            Usuario usuario = obtenerUsuarioActual(authentication);
+
+            if (!usuario.esAdministrador()) {
+                throw new IllegalArgumentException(
+                        "No tenés permiso para modificar asignaciones."
+                );
+            }
+
+            asignador.modificarAsignacion(
+                    id,
+                    espacioId,
+                    dias,
+                    horaInicio,
+                    horaFin
+            );
+
+            mensajes.addFlashAttribute(
+                    "ok",
+                    "La asignación fue modificada correctamente."
+            );
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/mis-asignaciones";
+    }
+
+    /**
+     * Cancela una asignación aprobada.
+     */
+    @PostMapping("/asignaciones/{id}/cancelar")
+    public String cancelarAsignacion(
+            @PathVariable String id,
+            Authentication authentication,
+            RedirectAttributes mensajes) {
+
+        try {
+            Usuario usuario = obtenerUsuarioActual(authentication);
+
+
+
+            asignador.cancelarAsignacion(
+                    id,
+                    usuario.getId(),
+                    usuario.esAdministrador()
+            );
+
+            mensajes.addFlashAttribute(
+                    "ok",
+                    "La asignación fue cancelada correctamente."
+            );
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            mensajes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/mis-asignaciones";
+    }
+
 
     /**
      * Devuelve los horarios disponibles para una propuesta alternativa.
@@ -178,7 +300,8 @@ public class AsignacionController {
 
         if (!usuario.esAdministrador()) {
             throw new IllegalArgumentException(
-                    "No tenés permiso para consultar estos horarios.");
+                    "No tenés permiso para consultar estos horarios."
+            );
         }
 
         return gestorPropuestas.obtenerHorariosDisponibles(
@@ -187,23 +310,20 @@ public class AsignacionController {
                 dias
         );
     }
+
     @PostMapping("/propuestas/crear")
     public String crearPropuesta(
             Authentication authentication,
-
             @RequestParam String solicitudId,
             @RequestParam String espacioId,
             @RequestParam(required = false) List<DayOfWeek> dias,
-
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaInicio,
-
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaFin,
             @RequestParam(required = false) String origen,
-
             RedirectAttributes mensajes) {
 
         try {
@@ -266,7 +386,6 @@ public class AsignacionController {
         return "redirect:/mis-asignaciones";
     }
 
-
     @PostMapping("/propuestas/{id}/rechazar")
     public String rechazarPropuesta(
             @PathVariable String id,
@@ -310,7 +429,8 @@ public class AsignacionController {
 
             if (!usuario.esAdministrador()) {
                 throw new IllegalArgumentException(
-                        "No tenés permiso para cancelar propuestas.");
+                        "No tenés permiso para cancelar propuestas."
+                );
             }
 
             gestorPropuestas.cancelarPropuesta(id);
@@ -334,18 +454,14 @@ public class AsignacionController {
     public String editarPropuesta(
             @PathVariable String id,
             Authentication authentication,
-
             @RequestParam String espacioId,
             @RequestParam(required = false) List<DayOfWeek> dias,
-
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaInicio,
-
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaFin,
-
             RedirectAttributes mensajes) {
 
         try {
@@ -353,7 +469,8 @@ public class AsignacionController {
 
             if (!usuario.esAdministrador()) {
                 throw new IllegalArgumentException(
-                        "No tenés permiso para editar propuestas.");
+                        "No tenés permiso para editar propuestas."
+                );
             }
 
             gestorPropuestas.editarPropuesta(
@@ -375,19 +492,17 @@ public class AsignacionController {
 
         return "redirect:/solicitudes-pendientes";
     }
+
     @PostMapping("/prueba-asignaciones/solicitar")
     public String solicitar(
             Authentication authentication,
-
             @RequestParam(required = false) String profesorId,
             @RequestParam String materiaId,
             @RequestParam int cantidadAlumnos,
             @RequestParam(required = false) List<DayOfWeek> dias,
-
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaInicio,
-
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
             LocalTime horaFin,
@@ -445,6 +560,15 @@ public class AsignacionController {
     public String procesar(RedirectAttributes mensajes) {
 
         try {
+            if (configuracionService.obtenerModoActual()
+                    == ModoFuncionamiento.RECEPCION_SOLICITUDES) {
+
+                throw new IllegalStateException(
+                        "No se pueden procesar solicitudes durante "
+                                + "el período de recepción."
+                );
+            }
+
             AsignadorService.ResultadoProcesamiento resultado =
                     asignador.procesarPendientes();
 
@@ -466,6 +590,15 @@ public class AsignacionController {
     public String reintentar(RedirectAttributes mensajes) {
 
         try {
+            if (configuracionService.obtenerModoActual()
+                    == ModoFuncionamiento.RECEPCION_SOLICITUDES) {
+
+                throw new IllegalStateException(
+                        "No se pueden reintentar asignaciones durante "
+                                + "el período de recepción."
+                );
+            }
+
             AsignadorService.ResultadoProcesamiento resultado =
                     asignador.reintentarPendientes();
 

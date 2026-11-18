@@ -129,27 +129,20 @@ public class ConfiguracionService {
     }
 
     /**
-     * Objetivo:
-     * Guardar o actualizar la configuración general del período académico, forzando el uso
-     * del identificador institucional predeterminado ({@code ID_CONFIGURACION}).
-     *
-     * Precondiciones:
-     * - El parámetro {@code configuracion} no debe ser nulo.
-     * - La base de datos debe estar disponible para operaciones de escritura.
-     *
-     * Parámetros:
-     * @param configuracion Instancia de {@link Configuracion} portadora de las fechas de inicio y fin para recepción y cursada.
-     *
-     * Retorno:
-     * @return {@link Configuracion} Entidad persistida en la base de datos con el identificador normalizado.
-     *
-     * Postcondiciones:
-     * - Si existía una configuración previa con id "principal", sus rangos de fechas quedan sobrescritos.
-     * - Si no existía, se crea un nuevo registro con identificador "principal".
-     *
-     * Excepciones:
-     * @throws IllegalArgumentException Si {@code configuracion} es {@code null}.
+     * Indica si la fecha corresponde al intervalo de planificación inicial.
+     * Es posterior al cierre de recepción y anterior al inicio de cursada.
      */
+    public boolean estaEnPlanificacionInicial(LocalDate fecha) {
+
+        if (fecha == null) {
+            throw new IllegalArgumentException("La fecha no puede ser nula");
+        }
+
+        Configuracion configuracion = obtenerConfiguracion();
+
+        return fecha.isAfter(configuracion.getFechaFinRecepcion())
+                && fecha.isBefore(configuracion.getFechaInicioCursada());
+    }
     public Configuracion guardarConfiguracion(
             Configuracion configuracion) {
 

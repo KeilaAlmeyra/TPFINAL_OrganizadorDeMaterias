@@ -90,7 +90,7 @@ class AsignadorServiceTest {
                 "principal",
                 hoy,
                 hoy,
-                hoy,
+                hoy.plusDays(1),
                 hoy.plusMonths(4)
         ));
 
@@ -147,7 +147,7 @@ class AsignadorServiceTest {
                 "principal",
                 hoy.minusDays(1),
                 hoy.minusDays(1),
-                hoy.minusDays(1),
+                hoy,
                 hoy.plusMonths(4)
         ));
     }

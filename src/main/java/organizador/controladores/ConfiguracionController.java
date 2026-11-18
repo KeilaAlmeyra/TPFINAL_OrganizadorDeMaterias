@@ -2,6 +2,7 @@
 package organizador.controladores;
 
 import organizador.modelos.Configuracion;
+import organizador.modelos.ModoFuncionamiento;
 import organizador.servicios.ConfiguracionService;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,15 +17,14 @@ import java.time.LocalDate;
 
 /**
  * Controlador de la configuración del período académico.
- * Permite al administrador definir dos períodos: la recepción de solicitudes</b>
- * y la cursada. Según la fecha actual, el sistema funciona en uno de tres modos
- * ({@code ModoFuncionamiento}): fuera de período, recepción de solicitudes o cursada.
- * Ese modo decide qué se puede hacer con las solicitudes de espacio
- * (ver {@code AsignacionController}).
+ *
+ * Permite al administrador definir los períodos de recepción de solicitudes
+ * y de cursada.
+ *
+ * Los botones de planificación inicial y reintentos permanecen visibles
+ * durante todo el año, pero se deshabilitan durante la recepción.
+ *
  * Acceso: solo administradores.
- * Los mensajes de éxito ({@code ok}) y de error ({@code error}) se envían con
- * {@code RedirectAttributes.addFlashAttribute}: viven hasta la próxima pantalla
- * y se muestran una sola vez.
  */
 @Controller
 public class ConfiguracionController {
@@ -37,40 +37,46 @@ public class ConfiguracionController {
     }
 
     /**
-     * Muestra la configuración vigente.
-     * Ruta: {@code GET /configuracion}. Si todavía no se guardó ninguna configuración,
-     * el servicio lanza {@code IllegalStateException} y se envía {@code configuracion = null},
-     * así la pantalla muestra el formulario vacío.
+     * Muestra la configuración académica vigente.
+     *
+     * También informa si actualmente se encuentra dentro del período
+     * de recepción, para controlar los botones de la pantalla.
+     *
      * @param model datos que se envían a la plantilla
-     * @return nombre de la plantilla {@code configuracion}
+     * @return nombre de la plantilla configuracion
      */
     @GetMapping("/configuracion")
     public String mostrar(Model model) {
 
         try {
+            Configuracion configuracion =
+                    configuracionService.obtenerConfiguracion();
+
+            model.addAttribute("configuracion", configuracion);
+
             model.addAttribute(
-                    "configuracion",
-                    configuracionService.obtenerConfiguracion()
+                    "estaEnRecepcion",
+                    configuracionService.obtenerModoActual()
+                            == ModoFuncionamiento.RECEPCION_SOLICITUDES
             );
+
         } catch (IllegalStateException e) {
             model.addAttribute("configuracion", null);
+            model.addAttribute("estaEnRecepcion", false);
         }
 
         return "configuracion";
     }
 
     /**
-     * Guarda (o actualiza) la configuración del período académico.
-     * Ruta: {@code POST /configuracion}. Hay una única configuración en el sistema, con
-     * identificador fijo {@code "principal"}: guardar de nuevo reemplaza la anterior.
-     * Si los datos no son válidos, se informa el error y no se guarda nada.
+     * Guarda o actualiza la configuración académica.
      *
-     * @param fechaInicioRecepcion primer día en que se reciben solicitudes ({@code AAAA-MM-DD})
-     * @param fechaFinRecepcion último día en que se reciben solicitudes
-     * @param fechaInicioCursada primer día de la cursada
-     * @param fechaFinCursada último día de la cursada
-     * @param mensajes mensajes que se muestran después de la redirección
-     * @return redirección a {@code /configuracion}
+     * @param fechaInicioRecepcion primer día de recepción
+     * @param fechaFinRecepcion último día de recepción
+     * @param fechaInicioCursada primer día de cursada
+     * @param fechaFinCursada último día de cursada
+     * @param mensajes mensajes para mostrar después de la redirección
+     * @return redirección a configuracion
      */
     @PostMapping("/configuracion")
     public String guardar(

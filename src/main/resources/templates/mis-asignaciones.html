@@ -75,7 +75,7 @@
             color: #8B3947;
         }
 
-        /* PROPUESTAS PENDIENTES */
+        /* PROPUESTAS ALTERNATIVAS */
 
         .propuestas-grid {
             display: grid;
@@ -125,7 +125,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-top: 18px;
+            margin-top: 10px;
         }
 
         button {
@@ -154,6 +154,21 @@
 
         .btn-rechazar:hover {
             background: #EDB3C0;
+        }
+
+        .btn-modificar {
+            display: inline-block;
+            padding: 9px 12px;
+            background: #A9B7C6;
+            color: #2D3A47;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .btn-modificar:hover {
+            background: #91A2B4;
         }
 
         /* ESTADOS */
@@ -185,7 +200,7 @@
             color: #8B3947;
         }
 
-        /* TABLAS */
+        /* TABLA */
 
         .tabla-contenedor {
             overflow-x: auto;
@@ -194,7 +209,7 @@
 
         table {
             width: 100%;
-            min-width: 700px;
+            min-width: 850px;
             border-collapse: collapse;
         }
 
@@ -222,35 +237,7 @@
             border-bottom: none;
         }
 
-        /* HISTORIAL DE PROPUESTAS */
-
-        .subseccion {
-            margin-top: 30px;
-            padding-top: 24px;
-            border-top: 1px solid #E8E0CF;
-        }
-
-        .historial-propuesta {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
-            align-items: center;
-            gap: 14px;
-            padding: 15px;
-            border: 1px solid #E8E0CF;
-            border-radius: 9px;
-            margin-top: 12px;
-            background: #FFFCF5;
-        }
-
-        .historial-propuesta small {
-            display: block;
-            color: #65717D;
-            margin-bottom: 5px;
-        }
-
-        .historial-propuesta strong {
-            overflow-wrap: anywhere;
-        }
+        /* MENSAJE SIN REGISTROS */
 
         .vacio {
             text-align: center;
@@ -261,6 +248,8 @@
             border-radius: 10px;
             margin-top: 18px;
         }
+
+        /* VOLVER */
 
         .volver {
             display: inline-block;
@@ -281,10 +270,6 @@
             .propuestas-grid {
                 grid-template-columns: 1fr;
             }
-
-            .historial-propuesta {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
         }
 
         @media (max-width: 550px) {
@@ -301,10 +286,6 @@
             }
 
             .datos-propuesta {
-                grid-template-columns: 1fr;
-            }
-
-            .historial-propuesta {
                 grid-template-columns: 1fr;
             }
 
@@ -333,7 +314,7 @@
     <p class="descripcion"
        th:text="${esAdministrador
             ? 'Consulta de todas las solicitudes y asignaciones registradas en el sistema.'
-            : 'Consultá el estado de tus solicitudes y los espacios asignados a tus materias.'}">
+            : 'Consultá todas tus solicitudes y el estado actual de cada una.'}">
         Consulta de asignaciones.
     </p>
 
@@ -348,27 +329,21 @@
          th:text="${error}">
     </div>
 
-    <!-- PROPUESTAS PENDIENTES DEL PROFESOR -->
+    <!-- PROPUESTAS ALTERNATIVAS PENDIENTES DEL PROFESOR -->
     <section class="seccion"
-             th:if="${not esAdministrador}">
+             th:if="${not esAdministrador and not #lists.isEmpty(propuestas)}">
 
         <div class="panel">
 
             <h2>Propuestas alternativas</h2>
 
             <p class="descripcion">
-                Estas son las alternativas de espacio, días y horarios
-                que te propuso el administrador. Podés aceptar o rechazar
-                cada una.
+                El administrador te propuso alternativas de espacio,
+                días y horarios para tu solicitud. Podés aceptar o
+                rechazar cada propuesta.
             </p>
 
-            <div th:if="${#lists.isEmpty(propuestas)}"
-                 class="vacio">
-                No tenés propuestas pendientes de respuesta.
-            </div>
-
-            <div class="propuestas-grid"
-                 th:unless="${#lists.isEmpty(propuestas)}">
+            <div class="propuestas-grid">
 
                 <article class="propuesta"
                          th:each="p : ${propuestas}">
@@ -385,30 +360,22 @@
 
                         <div class="dato">
                             <small>Espacio propuesto</small>
-                            <strong th:text="${p.espacio.nombre}">
-                                Aula
-                            </strong>
+                            <strong th:text="${p.espacio.nombre}">Aula</strong>
                         </div>
 
                         <div class="dato">
                             <small>Días propuestos</small>
-                            <strong th:text="${p.diasPropuestos}">
-                                Días
-                            </strong>
+                            <strong th:text="${p.diasPropuestos}">Días</strong>
                         </div>
 
                         <div class="dato">
                             <small>Hora de inicio</small>
-                            <strong th:text="${p.horaInicio}">
-                                08:00
-                            </strong>
+                            <strong th:text="${p.horaInicio}">08:00</strong>
                         </div>
 
                         <div class="dato">
                             <small>Hora de finalización</small>
-                            <strong th:text="${p.horaFin}">
-                                10:00
-                            </strong>
+                            <strong th:text="${p.horaFin}">10:00</strong>
                         </div>
 
                     </div>
@@ -418,19 +385,19 @@
                         <form th:action="@{/propuestas/{id}/aceptar(id=${p.id})}"
                               method="post">
 
-                            <button type="submit"
-                                    class="btn-aceptar">
+                            <button type="submit" class="btn-aceptar">
                                 Aceptar propuesta
                             </button>
+
                         </form>
 
                         <form th:action="@{/propuestas/{id}/rechazar(id=${p.id})}"
                               method="post">
 
-                            <button type="submit"
-                                    class="btn-rechazar">
+                            <button type="submit" class="btn-rechazar">
                                 Rechazar propuesta
                             </button>
+
                         </form>
 
                     </div>
@@ -441,33 +408,42 @@
         </div>
     </section>
 
-    <!-- HISTORIAL GENERAL -->
+    <!-- TABLA ÚNICA DE SOLICITUDES Y ASIGNACIONES -->
     <section class="seccion">
 
         <div class="panel">
 
             <h2 th:text="${esAdministrador
-                    ? 'Todas las solicitudes'
-                    : 'Todas mis solicitudes'}">
-                Todas mis solicitudes
+                    ? 'Todas las solicitudes y asignaciones'
+                    : 'Historial de solicitudes'}">
+                Historial de solicitudes
             </h2>
 
-            <p class="descripcion">
-                Acá se conserva el registro de todas las solicitudes,
-                independientemente de su estado actual.
+            <p class="descripcion"
+               th:text="${esAdministrador
+                    ? 'Consulta de todas las solicitudes y asignaciones. Podés modificar o cancelar las asignaciones activas.'
+                    : 'Consultá tus solicitudes y asignaciones. Podés cancelar tus asignaciones aprobadas y activas.'}">
+                Consulta de solicitudes y asignaciones.
             </p>
 
-            <div class="tabla-contenedor">
+            <div th:if="${#lists.isEmpty(solicitudes)}"
+                 class="vacio">
+                Todavía no hay solicitudes ni asignaciones registradas.
+            </div>
+
+            <div class="tabla-contenedor"
+                 th:unless="${#lists.isEmpty(solicitudes)}">
 
                 <table>
                     <thead>
                     <tr>
                         <th th:if="${esAdministrador}">Profesor</th>
                         <th>Materia</th>
-                        <th>Aula asignada</th>
-                        <th>Días solicitados</th>
-                        <th>Horario solicitado</th>
-                        <th>Estado de solicitud</th>
+                        <th>Espacio</th>
+                        <th>Días</th>
+                        <th>Horario</th>
+                        <th>Estado actual</th>
+                        <th>Acciones</th>
                     </tr>
                     </thead>
 
@@ -506,72 +482,47 @@
                             </span>
                         </td>
 
-                    </tr>
+                        <td>
 
-                    <tr th:if="${#lists.isEmpty(solicitudes)}">
-                        <td class="vacio"
-                            th:attr="colspan=${esAdministrador ? 6 : 5}">
-                            Todavía no hay solicitudes registradas.
+                            <!-- ACCIONES PARA ASIGNACIONES APROBADAS Y ACTIVAS -->
+                            <div class="acciones"
+                                 th:if="${solicitud.estado == 'APROBADA'
+                                         and solicitud.idAsignacion != null
+                                         and solicitud.estadoAsignacion == 'ACTIVA'}">
+
+                                <!-- SOLO EL ADMINISTRADOR PUEDE MODIFICAR -->
+                                <a th:if="${esAdministrador}"
+                                   th:href="@{/asignaciones/{id}/editar(id=${solicitud.idAsignacion})}"
+                                   class="btn-modificar">
+                                    Modificar
+                                </a>
+
+                                <!-- ADMINISTRADOR Y PROFESOR PUEDEN CANCELAR -->
+                                <form th:action="@{/asignaciones/{id}/cancelar(id=${solicitud.idAsignacion})}"
+                                      method="post"
+                                      onsubmit="return confirm('¿Estás seguro de cancelar esta asignación?');">
+
+                                    <button type="submit" class="btn-rechazar">
+                                        Cancelar
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                            <!-- SIN ACCIONES PARA SOLICITUDES PENDIENTES O CANCELADAS -->
+                            <span th:unless="${solicitud.estado == 'APROBADA'
+                                             and solicitud.idAsignacion != null
+                                             and solicitud.estadoAsignacion == 'ACTIVA'}">
+                                -
+                            </span>
+
                         </td>
+
                     </tr>
 
                     </tbody>
                 </table>
-
-            </div>
-
-            <!-- HISTORIAL DE PROPUESTAS RESPONDIDAS -->
-            <div class="subseccion"
-                 th:if="${not esAdministrador}">
-
-                <h2>Historial de propuestas alternativas</h2>
-
-                <p class="descripcion">
-                    Acá podés consultar las alternativas que ya respondiste.
-                    Las propuestas rechazadas no eliminan ni modifican
-                    tu solicitud original.
-                </p>
-
-                <div th:if="${#lists.isEmpty(historialPropuestas)}"
-                     class="vacio">
-                    Todavía no respondiste ninguna propuesta alternativa.
-                </div>
-
-                <article class="historial-propuesta"
-                         th:each="p : ${historialPropuestas}">
-
-                    <div>
-                        <small>Materia</small>
-                        <strong th:text="${p.solicitud.materia.nombre}">
-                            Materia
-                        </strong>
-                    </div>
-
-                    <div>
-                        <small>Espacio propuesto</small>
-                        <strong th:text="${p.espacio.nombre}">
-                            Aula
-                        </strong>
-                    </div>
-
-                    <div>
-                        <small>Horario propuesto</small>
-                        <strong>
-                            <span th:text="${p.horaInicio}">08:00</span>
-                            -
-                            <span th:text="${p.horaFin}">10:00</span>
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span class="estado"
-                              th:classappend="| estado-${#strings.toLowerCase(p.estado)}|"
-                              th:text="${p.estado}">
-                            ACEPTADA
-                        </span>
-                    </div>
-
-                </article>
 
             </div>
 

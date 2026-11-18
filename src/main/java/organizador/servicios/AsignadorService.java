@@ -492,6 +492,124 @@ public class AsignadorService {
         return new ResultadoProcesamiento(aprobadas, rechazadas);
     }
 
+
+    /**
+     * Modifica una asignación aprobada.
+     * Comprueba compatibilidad y disponibilidad antes de guardar.
+     */
+    @Transactional
+    public void modificarAsignacion(
+            String idAsignacion,
+            String idEspacio,
+            List<DayOfWeek> dias,
+            LocalTime horaInicio,
+            LocalTime horaFin) {
+
+        Asignacion asignacion = asignaciones.findById(idAsignacion)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No se encontró la asignación."));
+
+        if (!asignacion.estaActiva()
+                || !asignacion.getSolicitud().estaAprobada()) {
+            throw new IllegalStateException(
+                    "Solo se pueden modificar asignaciones aprobadas y activas.");
+        }
+
+        if (dias == null || dias.isEmpty()
+                || dias.contains(null)
+                || horaInicio == null
+                || horaFin == null
+                || !horaFin.isAfter(horaInicio)) {
+            throw new IllegalArgumentException(
+                    "Los días y horarios ingresados no son válidos.");
+        }
+
+        Espacio espacio = gestorEspacios.buscarPorId(idEspacio);
+
+        if (espacio == null) {
+            throw new IllegalArgumentException(
+                    "No se encontró el espacio seleccionado.");
+        }
+
+        Solicitud solicitud = asignacion.getSolicitud();
+
+        if (!espacio.estaDisponible()) {
+            throw new IllegalArgumentException(
+                    "El espacio seleccionado no está disponible.");
+        }
+
+        if (!espacio.esCompatible(
+                solicitud.getMateria().getTipoEspacioFrecuente(),
+                solicitud.getCantidadAlumnos())) {
+            throw new IllegalArgumentException(
+                    "El espacio no cumple con el tipo o la capacidad requerida.");
+        }
+
+        boolean disponible = prologService.validarDisponibilidadPropuesta(
+                solicitud,
+                espacio,
+                dias,
+                horaInicio,
+                horaFin,
+                asignaciones.findAll(),
+                reservas.findAll(),
+                asignacion.getId()
+        );
+
+        if (!disponible) {
+            throw new IllegalArgumentException(
+                    "El espacio tiene un conflicto de horario con otra asignación o reserva.");
+        }
+
+        asignacion.modificar(
+                espacio,
+                dias,
+                horaInicio,
+                horaFin
+        );
+
+        asignaciones.save(asignacion);
+    }
+
+    /**
+     * Cancela una asignación aprobada sin eliminar su registro.
+     */
+
+    @Transactional
+    public void cancelarAsignacion(
+            String idAsignacion,
+            String idUsuario,
+            boolean esAdministrador) {
+
+        Asignacion asignacion = asignaciones.findById(idAsignacion)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No se encontró la asignación."));
+
+        if (!esAdministrador
+                && !asignacion.getSolicitud().getProfesor()
+                .getId().equals(idUsuario)) {
+
+            throw new IllegalArgumentException(
+                    "No tenés permiso para cancelar esta asignación.");
+        }
+
+        if (!asignacion.estaActiva()
+                || !asignacion.getSolicitud().estaAprobada()) {
+
+            throw new IllegalStateException(
+                    "Solo se pueden cancelar asignaciones aprobadas y activas.");
+        }
+
+        Solicitud solicitud = asignacion.getSolicitud();
+
+        asignacion.cancelar();
+        solicitud.cambiarEstado(Solicitud.CANCELADA);
+
+        solicitudes.save(solicitud);
+        asignaciones.save(asignacion);
+    }
+
+
     /**
      * Objetivo:
      * Obtener el listado de usuarios que poseen el rol de profesor, ordenados alfabéticamente por nombre.
@@ -563,6 +681,22 @@ public class AsignadorService {
     }
 
     /**
+     * Convierte los días de la semana a nombres en español.
+     */
+    private String nombreDia(DayOfWeek dia) {
+
+        return switch (dia) {
+            case MONDAY -> "Lunes";
+            case TUESDAY -> "Martes";
+            case WEDNESDAY -> "Miércoles";
+            case THURSDAY -> "Jueves";
+            case FRIDAY -> "Viernes";
+            case SATURDAY -> "Sábado";
+            case SUNDAY -> "Domingo";
+        };
+    }
+
+    /**
      * Objetivo:
      * Construir y retornar una lista de representaciones simplificadas (DTO {@link FilaSolicitud})
      * de las solicitudes y sus asignaciones, aplicando filtros según el rol del usuario (administrador o profesor).
@@ -586,39 +720,63 @@ public class AsignadorService {
             String idProfesor,
             boolean esAdministrador) {
 
-        Map<String, String> aulasPorSolicitud = asignaciones.findAll().stream()
-                .collect(Collectors.toMap(
-                        a -> a.getSolicitud().getId(),
-                        a -> a.getEspacio().getNombre(),
-                        (anterior, nuevo) -> anterior
-                ));
+        Map<String, Asignacion> asignacionesPorSolicitud =
+                asignaciones.findAll().stream()
+                        .collect(Collectors.toMap(
+                                a -> a.getSolicitud().getId(),
+                                a -> a,
+                                (anterior, nuevo) -> anterior
+                        ));
 
         return solicitudes.findAll().stream()
 
-                // El administrador ve todas.
-                // El profesor solamente las que presentó él.
                 .filter(s -> esAdministrador
                         || (idProfesor != null
                         && s.getProfesor().getId().equals(idProfesor)))
 
                 .sorted(Comparator.comparing(Solicitud::getId))
 
-                .map(s -> new FilaSolicitud(
-                        s.getId(),
-                        s.getProfesor().getNombre(),
-                        s.getMateria().getNombre(),
-                        s.getMateria().getAnioCarrera(),
-                        s.getCantidadAlumnos(),
-                        s.getMateria().getTipoEspacioFrecuente(),
-                        s.getDias().stream()
-                                .map(DayOfWeek::toString)
-                                .collect(Collectors.joining(", ")),
-                        s.getHoraInicio(),
-                        s.getHoraFin(),
-                        s.getEstadoSolicitud(),
-                        s.getPuntajePrioridad(),
-                        aulasPorSolicitud.getOrDefault(s.getId(), "-")
-                ))
+                .map(s -> {
+                    Asignacion asignacion =
+                            asignacionesPorSolicitud.get(s.getId());
+
+                    String dias = asignacion != null
+                            ? asignacion.getDiasAsignados().stream()
+                            .map(this::nombreDia)
+                            .collect(Collectors.joining(", "))
+                            : s.getDias().stream()
+                            .map(this::nombreDia)
+                            .collect(Collectors.joining(", "));
+
+                    LocalTime inicio = asignacion != null
+                            ? asignacion.getHoraInicioAsignada()
+                            : s.getHoraInicio();
+
+                    LocalTime fin = asignacion != null
+                            ? asignacion.getHoraFinAsignada()
+                            : s.getHoraFin();
+
+                    String aula = asignacion != null
+                            ? asignacion.getEspacio().getNombre()
+                            : "-";
+
+                    return new FilaSolicitud(
+                            s.getId(),
+                            s.getProfesor().getNombre(),
+                            s.getMateria().getNombre(),
+                            s.getMateria().getAnioCarrera(),
+                            s.getCantidadAlumnos(),
+                            s.getMateria().getTipoEspacioFrecuente(),
+                            dias,
+                            inicio,
+                            fin,
+                            s.getEstadoSolicitud(),
+                            s.getPuntajePrioridad(),
+                            aula,
+                            asignacion != null ? asignacion.getId() : null,
+                            asignacion != null ? asignacion.getEstadoAsignacion() : null
+                    );
+                })
                 .toList();
     }
 
@@ -633,6 +791,24 @@ public class AsignadorService {
             int rechazadas) {
     }
 
+    /**
+     * Busca una asignación activa para preparar su modificación.
+     */
+    @Transactional(readOnly = true)
+    public Asignacion obtenerAsignacionParaEditar(String id) {
+
+        Asignacion asignacion = asignaciones.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No se encontró la asignación."));
+
+        if (!asignacion.estaActiva()
+                || !asignacion.getSolicitud().estaAprobada()) {
+            throw new IllegalStateException(
+                    "Solo se pueden editar asignaciones aprobadas y activas.");
+        }
+
+        return asignacion;
+    }
     /**
      * Objetivo:
      * Recuperar las asignaciones registradas y convertirlas a un modelo simplificado (DTO {@link FilaAsignacion}),
@@ -671,7 +847,7 @@ public class AsignadorService {
                         a.getSolicitud().getMateria().getNombre(),
                         a.getEspacio().getNombre(),
                         a.getDiasAsignados().stream()
-                                .map(DayOfWeek::toString)
+                                .map(this::nombreDia)
                                 .collect(Collectors.joining(", ")),
                         a.getHoraInicioAsignada(),
                         a.getHoraFinAsignada(),
@@ -732,6 +908,9 @@ public class AsignadorService {
             LocalTime fin,
             String estado,
             double puntaje,
-            String aula) {
+            String aula,
+            String idAsignacion,
+            String estadoAsignacion
+    ) {
     }
 }

@@ -49,6 +49,11 @@ public class Configuracion {
                     "La fecha de fin de cursada no puede ser anterior al inicio");
         }
 
+        if (!fechaFinRecepcion.isBefore(fechaInicioCursada)) {
+            throw new IllegalArgumentException(
+                    "El período de recepción debe finalizar antes del inicio de la cursada");
+        }
+
         this.id = id;
         this.fechaInicioRecepcion = fechaInicioRecepcion;
         this.fechaFinRecepcion = fechaFinRecepcion;

@@ -11,6 +11,7 @@ import organizador.repositorios.EspacioRepository;
 import organizador.repositorios.PropuestaAsignacionRepository;
 import organizador.repositorios.ReservaRepository;
 import organizador.repositorios.SolicitudRepository;
+import organizador.modelos.ModoFuncionamiento;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +42,8 @@ public class GestorPropuestas {
 
     private final GestorAsignaciones gestorAsignaciones;
 
+    private final ConfiguracionService configuracionService;
+
     /**
      * Inicializa el servicio inyectando los repositorios de persistencia
      * y los servicios colaboradores requeridos.
@@ -60,7 +63,8 @@ public class GestorPropuestas {
             AsignacionRepository asignacionRepository,
             ReservaRepository reservaRepository,
             PrologService prologService,
-            GestorAsignaciones gestorAsignaciones) {
+            GestorAsignaciones gestorAsignaciones,
+            ConfiguracionService configuracionService) {
 
         this.solicitudRepository = solicitudRepository;
         this.espacioRepository = espacioRepository;
@@ -69,6 +73,7 @@ public class GestorPropuestas {
         this.reservaRepository = reservaRepository;
         this.prologService = prologService;
         this.gestorAsignaciones = gestorAsignaciones;
+        this.configuracionService = configuracionService;
     }
 
     /**
@@ -101,6 +106,21 @@ public class GestorPropuestas {
     }
 
     /**
+     * Impide gestionar propuestas alternativas durante la recepción
+     * de solicitudes semestrales.
+     */
+    private void validarPeriodoParaPropuestas() {
+
+        if (configuracionService.obtenerModoActual()
+                == ModoFuncionamiento.RECEPCION_SOLICITUDES) {
+
+            throw new IllegalStateException(
+                    "No se pueden gestionar propuestas alternativas "
+                            + "durante el período de recepción de solicitudes.");
+        }
+    }
+
+    /**
      * Busca los horarios disponibles para un espacio y varios días.
      *
      * Conserva la duración original de la solicitud.
@@ -114,6 +134,8 @@ public class GestorPropuestas {
             String solicitudId,
             String espacioId,
             List<DayOfWeek> dias) {
+
+        validarPeriodoParaPropuestas();
 
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -220,6 +242,7 @@ public class GestorPropuestas {
             List<DayOfWeek> dias,
             LocalTime horaInicio,
             LocalTime horaFin) {
+        validarPeriodoParaPropuestas();
 
         Solicitud solicitud = solicitudRepository.findById(solicitudId)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -490,6 +513,7 @@ public class GestorPropuestas {
             List<DayOfWeek> dias,
             LocalTime horaInicio,
             LocalTime horaFin) {
+        validarPeriodoParaPropuestas();
 
         PropuestaAsignacion propuesta = propuestaRepository.findById(propuestaId)
                 .orElseThrow(() -> new IllegalArgumentException(
