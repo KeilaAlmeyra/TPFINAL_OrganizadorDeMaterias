@@ -28,6 +28,22 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * Controlador de las reservas de espacios por fecha y horario.
+ * Atiende el formulario para reservar, el listado de reservas, la cancelación y la
+ * revisión de solicitudes pendientes por parte del administrador.
+ * Las reglas de negocio las aplica {@code ReservaService}: no se puede reservar en
+ * una fecha pasada, el horario debe estar entre las 08:00 y las 22:00 en bloques de
+ * 30 minutos, y el espacio debe estar habilitado.
+ * Una reserva puede estar en cuatro estados:
+ *   {@code CONFIRMADA}: el horario es del usuario.
+ *   {@code PENDIENTE}: el espacio ya estaba ocupado; el administrador decide.
+ *   {@code RECHAZADA}: el administrador la rechazó e indicó el motivo.
+ *   {@code CANCELADA}: se canceló; el registro se conserva como historial.
+ * Los mensajes de éxito ({@code ok}) y de error ({@code error}) se envían con
+ * {@code RedirectAttributes.addFlashAttribute}: viven hasta la próxima pantalla
+ * y se muestran una sola vez.
+ */
 @Controller
 public class ReservaController {
 
@@ -52,7 +68,16 @@ public class ReservaController {
         this.gestorPropuestas = gestorPropuestas;
     }
 
-    // Muestra el formulario para crear una reserva.
+    /**
+     * Muestra el formulario para crear una reserva.
+     * Ruta: {@code GET /reservar}. Acceso: cualquier usuario con sesión iniciada.
+     * Datos que se envían a la plantilla: {@code espaciosDisponibles} (los espacios que se
+     * pueden elegir), {@code usuario} (nombre de quien reserva) y {@code hoy} (fecha actual).
+     *
+     * @param authentication datos de la sesión
+     * @param model datos que se envían a la plantilla
+     * @return nombre de la plantilla {@code nueva-reserva}
+     */
     @GetMapping("/reservar")
     public String mostrarFormulario(
             Authentication authentication,
@@ -69,7 +94,15 @@ public class ReservaController {
         return "nueva-reserva";
     }
 
-    // Muestra las reservas del usuario o todas si es administrador.
+    /**
+     * Muestra el listado de reservas.
+     * Ruta: {@code GET /mis-reservas}. Un profesor ve solamente las suyas; un administrador
+     * ve las de todos, ordenadas por fecha y hora.
+     *
+     * @param authentication datos de la sesión
+     * @param model datos que se envían a la plantilla ({@code reservas} y {@code esAdministrador})
+     * @return nombre de la plantilla {@code mis-reservas}
+     */
     @GetMapping("/mis-reservas")
     public String mostrarReservas(
             Authentication authentication,
@@ -90,7 +123,25 @@ public class ReservaController {
         return "mis-reservas";
     }
 
-    // Registra una nueva reserva.
+    /**
+     * Registra una nueva reserva.
+     * Ruta: {@code POST /reservar}. Quién reserva (nombre y correo) se toma de la sesión,
+     * no del formulario, así nadie puede reservar a nombre de otra persona.
+     * Los parámetros son opcionales a propósito ({@code required = false}): si falta alguno,
+     * el servicio responde con un mensaje claro en lugar de un error genérico.
+     * Si el espacio ya tiene una reserva confirmada en ese horario, la solicitud <b>no se
+     * descarta: queda {@code PENDIENTE} para que el administrador la revise
+     * Si los datos no cumplen las reglas (fecha pasada, horario fuera de rango, etc.),
+     * se vuelve al formulario con el motivo.
+     *
+     * @param espacio código del espacio elegido
+     * @param fecha día de la reserva ({@code AAAA-MM-DD})
+     * @param horaInicio hora de inicio ({@code HH:MM})
+     * @param horaFin hora de fin ({@code HH:MM})
+     * @param authentication datos de la sesión
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a {@code /mis-reservas} si salió bien, o a {@code /reservar} si hubo un error
+     */
     @PostMapping("/reservar")
     public String reservar(
             @RequestParam(required = false) String espacio,
@@ -129,8 +180,19 @@ public class ReservaController {
         }
     }
 
-    // Cancela una reserva respetando los permisos del usuario.
-    @PostMapping("/reservas/{id}/cancelar")
+    /**
+     * Cancela una reserva.
+     * Ruta: {@code POST /reservas/{id}/cancelar}. Un usuario solo puede cancelar sus propias
+     * reservas; un administrador puede cancelar cualquiera. La reserva no se borra: pasa al
+     * estado {@code CANCELADA} y queda en el historial.
+     * Si la reserva no existe, ya estaba cancelada o rechazada, o no pertenece al usuario,
+     * se informa el error.
+     *
+     * @param id identificador de la reserva
+     * @param authentication datos de la sesión
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a {@code /mis-reservas}
+     */    @PostMapping("/reservas/{id}/cancelar")
     public String cancelar(
             @PathVariable Long id,
             Authentication authentication,
@@ -166,7 +228,16 @@ public class ReservaController {
     }
 
 
-    // Pantalla exclusiva para revisar solicitudes pendientes.
+    /**
+     * Muestra las solicitudes pendientes de revisión.
+     * Ruta: {@code GET /solicitudes-pendientes}. Acceso: solo administradores. Está
+     * protegida en {@code SeguridadConfig} y además se verifica el rol acá: si no es
+     * administrador, se lo redirige a la página principal.
+     *
+     * @param authentication datos de la sesión
+     * @param model datos que se envían a la plantilla ({@code solicitudes})
+     * @return nombre de la plantilla {@code solicitudes-pendientes}, o redirección a {@code /}
+     */
     @GetMapping("/solicitudes-pendientes")
     public String mostrarPendientes(
             Authentication authentication,
@@ -253,7 +324,17 @@ public class ReservaController {
         return "solicitudes-pendientes";
     }
 
-    // El administrador aprueba una solicitud.
+    /**
+     * Aprueba una solicitud pendiente.
+     * Ruta: {@code POST /reservas/{id}/aprobar}. Acceso: solo administradores. El servicio
+     * comprueba que la solicitud siga pendiente y que el horario ya no esté ocupado; si todo
+     * está bien, la reserva pasa a {@code CONFIRMADA}.
+     *
+     * @param id identificador de la reserva
+     * @param authentication datos de la sesión
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a {@code /solicitudes-pendientes}
+     */
     @PostMapping("/reservas/{id}/aprobar")
     public String aprobar(
             @PathVariable Long id,
@@ -281,7 +362,17 @@ public class ReservaController {
         return "redirect:/solicitudes-pendientes";
     }
 
-    // El administrador rechaza una solicitud indicando el motivo.
+    /**
+     * Rechaza una solicitud pendiente.
+     * Ruta: {@code POST /reservas/{id}/rechazar}. Acceso: solo administradores. Es obligatorio
+     * indicar el motivo, que queda guardado y se le muestra al usuario.
+     *
+     * @param id identificador de la reserva
+     * @param motivo explicación del rechazo
+     * @param authentication datos de la sesión
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a {@code /solicitudes-pendientes}
+     */
     @PostMapping("/reservas/{id}/rechazar")
     public String rechazar(
             @PathVariable Long id,
@@ -311,6 +402,14 @@ public class ReservaController {
     }
 
 
+    /**
+     * Busca en la base de datos al usuario que tiene la sesión iniciada.
+     * El nombre de la sesión es el correo electrónico, sin distinguir mayúsculas.
+     *
+     * @param authentication datos de la sesión
+     * @return el usuario autenticado
+     * @throws IllegalArgumentException si no hay sesión o el usuario no existe
+     */
     private Usuario obtenerUsuarioAutenticado(
             Authentication authentication) {
 

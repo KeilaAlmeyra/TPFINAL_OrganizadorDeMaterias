@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
 
+/**
+ * Controlador de la página principal.
+ * Es la pantalla a la que llega el usuario después de iniciar sesión. Junta los datos
+ * que muestra la portada: los espacios, las reservas del usuario y su rol.
+ */
 @Controller
 public class InicioController {
 
@@ -28,6 +33,21 @@ public class InicioController {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /**
+     * Muestra la página principal.
+     * Ruta: {@code GET /}. Acceso: cualquier usuario con sesión iniciada.
+     * Datos que se envían a la plantilla {@code index}:
+     *   {@code espacios}: todos los espacios registrados.
+     *   {@code espaciosDisponibles}: solo los espacios habilitados para usarse.</li>
+     *   {@code reservas}: las reservas del usuario (todas, si es administrador).</li>
+     *   {@code usuario}: nombre de quien inició sesión.
+     *   {@code esAdministrador}: permite mostrar u ocultar opciones según el rol.</li>
+     *   {@code hoy}: fecha actual.
+     * @param authentication datos de la sesión; su nombre es el correo del usuario
+     * @param model datos que se envían a la plantilla
+     * @return nombre de la plantilla {@code index}
+     * @throws IllegalStateException si el usuario de la sesión no existe en la base de datos
+     */
     @GetMapping("/")
     public String inicio(Authentication authentication, Model model) {
 

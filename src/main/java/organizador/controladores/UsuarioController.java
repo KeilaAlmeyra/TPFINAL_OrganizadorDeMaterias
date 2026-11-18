@@ -13,6 +13,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.UUID;
 
+/**
+ * Controlador de los usuarios del sistema.
+ * Acceso: solo administradores ({@code SeguridadConfig} protege {@code /usuarios/**}).
+ * Permite ver los usuarios y registrar profesores. Las contraseñas nunca se guardan en
+ * texto plano: se cifran con el {@code PasswordEncoder} (BCrypt) antes de guardarlas.
+ * Los mensajes de éxito ({@code ok}) y de error ({@code error}) se envían con
+ * {@code RedirectAttributes.addFlashAttribute}: viven hasta la próxima pantalla
+ * y se muestran una sola vez.
+ */
 @Controller
 public class UsuarioController {
 
@@ -27,6 +36,13 @@ public class UsuarioController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Muestra el listado de usuarios.
+     * Ruta: {@code GET /usuarios}.
+     *
+     * @param model datos que se envían a la plantilla ({@code usuarios})
+     * @return nombre de la plantilla {@code usuarios}
+     */
     @GetMapping("/usuarios")
     public String mostrarUsuarios(Model model) {
 
@@ -35,6 +51,21 @@ public class UsuarioController {
         return "usuarios";
     }
 
+    /**
+     * Registra un profesor nuevo.
+     * Ruta: {@code POST /usuarios/registrar}. Validaciones, en este orden:
+     * Nombre, correo y contraseña son obligatorios.
+     * La contraseña debe tener al menos 12 caracteres.
+     * No puede existir otro usuario con el mismo correo.
+     * El correo se guarda en minúsculas y el identificador se genera automáticamente.
+     * El rol siempre es {@code "profesor"}: los administradores no se crean desde esta pantalla.
+     *
+     * @param nombre nombre completo
+     * @param correo correo electrónico, que se usa para iniciar sesión
+     * @param contrasena contraseña en texto; se cifra antes de guardarla
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a {@code /usuarios}
+     */
     @PostMapping("/usuarios/registrar")
     public String registrarProfesor(
             @RequestParam String nombre,
