@@ -341,7 +341,9 @@ public class PrologService {
 
             for (Reserva reserva : reservas) {
 
-                if (reserva == null || reserva.getFecha() == null) {
+                if (reserva == null
+                        || reserva.getFecha() == null
+                        || !"CONFIRMADA".equals(reserva.getEstado())) {
                     continue;
                 }
 

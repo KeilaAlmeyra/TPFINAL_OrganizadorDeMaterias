@@ -7,136 +7,291 @@
     <title>Solicitudes pendientes</title>
 
     <style>
-        :root {
-            --crema: #FFF7E6;
-            --rosa: #F7C8D3;
-            --rojo: #B46A72;
-            --verde: #A8B58A;
-            --celeste: #A9B7C6;
-            --azul: #2D3A47;
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: "Times New Roman", Times, serif;
-            background: var(--crema);
-            color: var(--azul);
             margin: 0;
-        }
-
-        header {
-            background: var(--azul);
-            color: var(--crema);
-            padding: 20px 32px;
-        }
-
-        header a {
-            color: var(--crema);
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #FFF7E6;
+            color: #2D3A47;
         }
 
         main {
-            max-width: 1100px;
-            margin: 24px auto;
-            padding: 0 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .volver {
+            display: inline-block;
+            margin-bottom: 25px;
+            padding: 12px 19px;
+            background: #A9B7C6;
+            color: #2D3A47;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .volver:hover {
+            background: #91A2B4;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin: 0 0 10px;
+        }
+
+        h2 {
+            color: #2D3A47;
+            font-size: 22px;
+            margin: 0 0 18px;
+        }
+
+        h3 {
+            color: #2D3A47;
+            font-size: 17px;
+            margin: 20px 0 12px;
+        }
+
+        .descripcion {
+            color: #65717D;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .descripcion-seccion {
+            color: #65717D;
+            line-height: 1.5;
+            margin-bottom: 20px;
         }
 
         section {
             background: white;
-            border-radius: 8px;
-            padding: 20px 24px;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
         }
 
-        h2 {
-            color: var(--rojo);
+        .separador {
+            margin: 30px 0;
+            border: none;
+            border-top: 1px solid #D8CEBA;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 10px;
         }
 
-        th, td {
-            padding: 10px;
+        th,
+        td {
+            padding: 13px 12px;
             text-align: left;
-            border-bottom: 1px solid var(--celeste);
+            border-bottom: 1px solid #E8E0CF;
         }
 
         th {
-            background: var(--rosa);
+            background: #F7C8D3;
+            color: #2D3A47;
+            font-size: 14px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #FFFCF5;
         }
 
         button {
-            border: 0;
-            border-radius: 4px;
-            padding: 8px 12px;
-            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 15px;
             margin: 3px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         .aprobar {
-            background: var(--verde);
-            color: var(--azul);
+            background: #A9B7C6;
+            color: #2D3A47;
+        }
+
+        .aprobar:hover {
+            background: #91A2B4;
         }
 
         .rechazar {
-            background: var(--rojo);
+            background: #B46A72;
             color: white;
         }
 
-        input {
+        .rechazar:hover {
+            background: #98545D;
+        }
+
+        input:not([type="checkbox"]),
+        select {
             width: 100%;
-            padding: 7px;
-            box-sizing: border-box;
-            border: 1px solid var(--celeste);
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #D8CEBA;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            background: white;
+            color: #2D3A47;
+        }
+
+        input:focus,
+        select:focus {
+            outline: 2px solid #A9B7C6;
         }
 
         .mensaje {
-            padding: 12px;
-            border-radius: 4px;
-            margin-bottom: 12px;
+            padding: 13px 16px;
+            border-radius: 9px;
+            margin-bottom: 18px;
         }
 
         .ok {
-            background: #e6f4ea;
+            background: #DDEBD5;
+            color: #355B32;
         }
 
         .error {
-            background: #fdecea;
+            background: #F7C8D3;
+            color: #8B3947;
         }
 
         .vacio {
             text-align: center;
             padding: 24px;
+            color: #65717D;
         }
 
-        select {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid var(--celeste);
-            border-radius: 4px;
-            margin: 8px 0;
+        .propuesta {
+            border: 1px solid #E8E0CF;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 18px 0;
+            background: #FFFCF5;
         }
 
-        form label {
-            margin-right: 12px;
+        .propuesta h3:first-child {
+            margin-top: 0;
         }
 
-        form input[type="checkbox"] {
-            width: auto;
+        .propuesta p {
+            line-height: 1.5;
+            margin: 10px 0;
+            color: #65717D;
+        }
+
+        .propuesta p strong {
+            color: #2D3A47;
+        }
+
+        .propuesta form {
+            margin-top: 14px;
+        }
+
+        .propuesta form > label:not(:has(input[type="checkbox"])) {
+            display: block;
+            margin: 14px 0 6px;
+            font-weight: bold;
+            color: #2D3A47;
+            font-size: 14px;
+        }
+
+        .propuesta form p {
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+
+        .propuesta form label:has(input[type="checkbox"]) {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin: 5px 14px 5px 0;
+            padding: 8px 11px;
+            background: #FFF7E6;
+            border: 1px solid #E8E0CF;
+            border-radius: 7px;
+            color: #2D3A47;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .propuesta input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: #A9B7C6;
+            cursor: pointer;
+        }
+
+        .propuesta select:disabled {
+            background: #F1F1F1;
+            color: #65717D;
+            cursor: not-allowed;
+        }
+
+        .propuesta form > button {
+            margin-top: 15px;
+        }
+
+        .propuesta form[th\:action*="cancelar"] {
+            margin-top: 10px;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 15px;
+            }
+
+            section {
+                padding: 17px;
+                overflow-x: auto;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+            table {
+                min-width: 950px;
+            }
+
+            .propuesta {
+                padding: 16px;
+            }
+
+            .propuesta form label:has(input[type="checkbox"]) {
+                margin-right: 5px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<header>
-    <h1>Solicitudes pendientes</h1>
-    <p>Revisá las solicitudes de reserva que necesitan aprobación.</p>
-    <a th:href="@{/}">Volver al inicio</a>
-</header>
-
 <main>
+
+    <a th:href="@{/}" class="volver">Volver al inicio</a>
+
+    <h1>Solicitudes pendientes</h1>
+
+    <p class="descripcion">
+        Revisá las solicitudes de reserva que necesitan aprobación.
+    </p>
+
     <section>
 
         <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
@@ -201,12 +356,11 @@
             </tbody>
         </table>
 
-
-        <hr style="margin: 30px 0; border: 1px solid var(--celeste);">
+        <hr class="separador">
 
         <h2>Solicitudes de asignación pendientes</h2>
 
-        <p>
+        <p class="descripcion-seccion">
             Solicitudes de clases que no consiguieron un espacio durante
             el procesamiento de prioridades y necesitan una alternativa.
         </p>
@@ -217,10 +371,7 @@
         </div>
 
         <div th:each="solicitud : ${solicitudesAsignacionPendientes}"
-             style="border: 1px solid var(--celeste);
-                    border-radius: 8px;
-                    padding: 16px;
-                    margin: 16px 0;">
+             class="propuesta">
 
             <h3 th:text="|${solicitud.materia} - ${solicitud.profesor}|"></h3>
 
@@ -341,11 +492,11 @@
 
         </div>
 
-        <hr style="margin: 30px 0; border: 1px solid var(--celeste);">
+        <hr class="separador">
 
         <h2>Esperando respuesta del profesor</h2>
 
-        <p>
+        <p class="descripcion-seccion">
             Estas solicitudes ya tienen una propuesta enviada.
             Podés modificarla o cancelarla mientras el profesor no haya respondido.
         </p>
@@ -356,10 +507,7 @@
         </div>
 
         <div th:each="propuesta : ${propuestasEsperandoRespuesta}"
-             style="border: 1px solid var(--celeste);
-            border-radius: 8px;
-            padding: 16px;
-            margin: 16px 0;">
+             class="propuesta">
 
             <h3 th:text="|${propuesta.solicitud.materia.nombre} - ${propuesta.solicitud.profesor.nombre}|"></h3>
 
@@ -656,12 +804,14 @@
                 alert('Seleccioná un horario disponible antes de enviar la propuesta.');
             }
         });
-                // Al cargar una propuesta existente, consultar sus horarios actuales.
+
+        // Al cargar una propuesta existente, consultar sus horarios actuales.
         if (form.dataset.horaInicio && form.dataset.horaFin) {
             actualizarHorarios();
         }
 
     });
 </script>
+
 </body>
 </html>

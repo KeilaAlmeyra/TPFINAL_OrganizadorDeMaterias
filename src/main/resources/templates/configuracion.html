@@ -3,137 +3,180 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Configuración académica</title>
 
     <style>
-        :root {
-            --crema: #FFF7E6;
-            --rosa: #F7C8D3;
-            --rojo: #B46A72;
-            --verde: #A8B58A;
-            --celeste: #A9B7C6;
-            --azul: #2D3A47;
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: "Times New Roman", Times, serif;
-            background-color: var(--crema);
-            color: var(--azul);
             margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #FFF7E6;
+            color: #2D3A47;
         }
 
-        header {
-            background-color: var(--azul);
-            color: var(--crema);
-            padding: 20px 32px;
+        .contenedor {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        nav {
-            background-color: var(--celeste);
-            padding: 10px 32px;
-        }
-
-        nav a {
-            color: var(--azul);
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        main {
-            max-width: 750px;
-            margin: 24px auto;
-            padding: 0 16px;
-        }
-
-        section {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        h1 {
+            margin: 0 0 8px;
+            font-size: 30px;
         }
 
         h2 {
-            margin-top: 0;
-            color: var(--rojo);
+            margin: 0 0 14px;
+            font-size: 22px;
+        }
+
+        h3 {
+            margin: 22px 0 14px;
+            font-size: 17px;
+        }
+
+        .descripcion {
+            color: #65717D;
+            line-height: 1.5;
+            margin: 0 0 24px;
+        }
+
+        .ayuda {
+            color: #65717D;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0 0 18px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        /* VOLVER AL INICIO */
+
+        .volver {
+            display: inline-block;
+            margin-bottom: 25px;
+            padding: 12px 19px;
+            background: #A9B7C6;
+            color: #2D3A47;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .volver:hover {
+            background: #91A2B4;
+        }
+
+        /* MENSAJES */
+
+        .mensaje {
+            padding: 13px 16px;
+            border-radius: 9px;
+            margin: 18px 0;
+            font-weight: bold;
+            line-height: 1.5;
+        }
+
+        .ok {
+            background: #DDEBD5;
+            color: #355B32;
+        }
+
+        .error {
+            background: #F7C8D3;
+            color: #8B3947;
+        }
+
+        /* FORMULARIOS */
+
+        .fila {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px 22px;
+        }
+
+        .campo {
+            min-width: 0;
         }
 
         label {
             display: block;
-            margin-top: 14px;
+            margin-bottom: 8px;
             font-weight: bold;
         }
 
         input {
             width: 100%;
-            padding: 9px;
-            margin-top: 5px;
-            border: 1px solid var(--celeste);
-            border-radius: 4px;
-            box-sizing: border-box;
-            font-family: inherit;
-            font-size: 15px;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #D8CEBA;
+            border-radius: 8px;
+            background: white;
+            color: #2D3A47;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
         }
 
-        .fila {
-            display: flex;
-            gap: 16px;
+        input:focus {
+            outline: 2px solid #A9B7C6;
+            border-color: #65717D;
         }
 
-        .fila > div {
-            flex: 1;
-        }
+        /* BOTONES */
 
         button {
-            background-color: var(--azul);
-            color: var(--crema);
+            margin-top: 22px;
+            padding: 12px 19px;
+            background: #A9B7C6;
+            color: #2D3A47;
             border: none;
-            border-radius: 4px;
-            padding: 10px 18px;
-            font-size: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
-            margin-top: 20px;
+            transition: background 0.2s;
         }
 
         button:hover:not(:disabled) {
-            background-color: var(--verde);
-            color: var(--azul);
+            background: #91A2B4;
         }
 
         button:disabled {
-            background-color: #A9B7C6;
-            color: #52606D;
+            background: #E5E5E5;
+            color: #8A8A8A;
             cursor: not-allowed;
-            opacity: 0.75;
-        }
-
-        .mensaje {
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin-bottom: 16px;
-            font-weight: 600;
-        }
-
-        .ok {
-            background: #e6f4ea;
-            color: #1e6b34;
-        }
-
-        .error {
-            background: #fdecea;
-            color: #a12a22;
-        }
-
-        .ayuda {
-            font-size: 14px;
             opacity: 0.8;
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            .panel {
+                padding: 17px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
             .fila {
-                flex-direction: column;
-                gap: 0;
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                width: 100%;
             }
         }
     </style>
@@ -141,23 +184,34 @@
 
 <body>
 
-<header>
+<div class="contenedor">
+
+    <!-- VOLVER AL INICIO -->
+    <a th:href="@{/}" class="volver">
+        Volver al inicio
+    </a>
+
+    <!-- ENCABEZADO -->
     <h1>Configuración académica</h1>
-    <p>Administración de los períodos de recepción y cursada.</p>
-</header>
 
-<nav>
-    <a th:href="@{/}">Volver al inicio</a>
-</nav>
-
-<main>
+    <p class="descripcion">
+        Administración de los períodos de recepción y cursada.
+    </p>
 
     <!-- CONFIGURACIÓN DE PERÍODOS -->
-    <section>
+    <section class="panel">
+
         <h2>Períodos académicos</h2>
 
-        <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
-        <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
+        <div th:if="${ok}"
+             class="mensaje ok"
+             th:text="${ok}">
+        </div>
+
+        <div th:if="${error}"
+             class="mensaje error"
+             th:text="${error}">
+        </div>
 
         <p class="ayuda">
             Definí cuándo se reciben las solicitudes y durante qué fechas
@@ -171,8 +225,10 @@
             <h3>Recepción de solicitudes</h3>
 
             <div class="fila">
-                <div>
+
+                <div class="campo">
                     <label for="fechaInicioRecepcion">Fecha de inicio</label>
+
                     <input type="date"
                            id="fechaInicioRecepcion"
                            name="fechaInicioRecepcion"
@@ -180,21 +236,25 @@
                            required>
                 </div>
 
-                <div>
+                <div class="campo">
                     <label for="fechaFinRecepcion">Fecha de finalización</label>
+
                     <input type="date"
                            id="fechaFinRecepcion"
                            name="fechaFinRecepcion"
                            th:value="${configuracion != null ? configuracion.fechaFinRecepcion : ''}"
                            required>
                 </div>
+
             </div>
 
             <h3>Período de cursada</h3>
 
             <div class="fila">
-                <div>
+
+                <div class="campo">
                     <label for="fechaInicioCursada">Fecha de inicio</label>
+
                     <input type="date"
                            id="fechaInicioCursada"
                            name="fechaInicioCursada"
@@ -202,22 +262,29 @@
                            required>
                 </div>
 
-                <div>
+                <div class="campo">
                     <label for="fechaFinCursada">Fecha de finalización</label>
+
                     <input type="date"
                            id="fechaFinCursada"
                            name="fechaFinCursada"
                            th:value="${configuracion != null ? configuracion.fechaFinCursada : ''}"
                            required>
                 </div>
+
             </div>
 
-            <button type="submit">Guardar configuración</button>
+            <button type="submit">
+                Guardar configuración
+            </button>
+
         </form>
+
     </section>
 
     <!-- PLANIFICACIÓN INICIAL -->
-    <section>
+    <section class="panel">
+
         <h2>Planificación inicial</h2>
 
         <p class="ayuda">
@@ -233,11 +300,14 @@
                     th:disabled="${estaEnRecepcion}">
                 Procesar solicitudes pendientes
             </button>
+
         </form>
+
     </section>
 
     <!-- REINTENTAR ASIGNACIONES -->
-    <section>
+    <section class="panel">
+
         <h2>Reintentar asignaciones</h2>
 
         <p class="ayuda">
@@ -253,10 +323,12 @@
                     th:disabled="${estaEnRecepcion}">
                 Reintentar solicitudes pendientes
             </button>
+
         </form>
+
     </section>
 
-</main>
+</div>
 
 <script>
     const formulario = document.getElementById("formConfiguracion");

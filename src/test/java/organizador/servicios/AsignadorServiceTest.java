@@ -237,18 +237,33 @@ class AsignadorServiceTest {
         assertEquals(2, asignaciones.count());
     }
 
+
     @Test
     void noAsignaUnAulaSinCapacidadSuficiente() {
 
+        // Primero se crea una solicitud válida:
+        // existe un aula de 30 lugares y se solicitan 25.
         asignador.crearSolicitud(
                 "TEST-P1",
                 "TEST-M1",
-                31,
+                25,
                 List.of(DayOfWeek.TUESDAY),
                 LocalTime.of(14, 0),
                 LocalTime.of(16, 0),
                 Solicitud.CLASE_REGULAR
         );
+
+        // Simulamos que el aula original deja de estar disponible
+        // antes de procesar las solicitudes.
+        espacios.deleteAll();
+
+        espacios.save(new Espacio(
+                "TEST-AULA-CHICA",
+                "Aula pequeña de prueba",
+                20,
+                "aula",
+                "disponible"
+        ));
 
         cerrarRecepcion();
 

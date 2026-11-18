@@ -4,6 +4,9 @@ package organizador.servicios;
 import organizador.modelos.Espacio;
 import organizador.modelos.Reserva;
 import organizador.repositorios.ReservaRepository;
+import organizador.modelos.Asignacion;
+import organizador.modelos.ModoFuncionamiento;
+import organizador.repositorios.AsignacionRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,11 +21,19 @@ public class ReservaService {
 
     private final ReservaRepository reservaRepositorio;
     private final GestorEspacios gestorEspacios;
+    private final AsignacionRepository asignacionRepositorio;
+    private final ConfiguracionService configuracionService;
 
-    public ReservaService(ReservaRepository reservaRepositorio,
-                          GestorEspacios gestorEspacios) {
+    public ReservaService(
+            ReservaRepository reservaRepositorio,
+            GestorEspacios gestorEspacios,
+            AsignacionRepository asignacionRepositorio,
+            ConfiguracionService configuracionService) {
+
         this.reservaRepositorio = reservaRepositorio;
         this.gestorEspacios = gestorEspacios;
+        this.asignacionRepositorio = asignacionRepositorio;
+        this.configuracionService = configuracionService;
     }
 
     public Reserva reservar(String espacioId, LocalDate fecha,
@@ -76,18 +87,164 @@ public class ReservaService {
                 propietarioCorreo
         );
 
-        long superposiciones = reservaRepositorio.contarSuperposiciones(
-                espacioId, fecha, horaInicio, horaFin
-        );
+        ModoFuncionamiento modo = configuracionService.obtenerModoActual();
 
-        if (superposiciones > 0) {
-            reserva.marcarPendiente(
-                    "El espacio ya tiene una reserva confirmada "
-                            + "en ese horario. Requiere revisión del administrador."
+// Fuera del período académico no se permiten reservas.
+        if (modo == ModoFuncionamiento.FUERA_DE_PERIODO) {
+            throw new IllegalArgumentException(
+                    "No se pueden realizar reservas fuera del período académico."
             );
         }
 
+// Durante la recepción, las reservas quedan pendientes.
+// Se procesarán después de las solicitudes de materias.
+        if (modo == ModoFuncionamiento.RECEPCION_SOLICITUDES) {
+
+            reserva.marcarPendiente(
+                    "Pendiente de procesamiento al comenzar el período de cursada."
+            );
+
+        } else {
+
+            // Durante la cursada, comprobar conflictos con asignaciones activas.
+            List<Asignacion> asignaciones = asignacionRepositorio.findAll();
+
+            if (tieneConflictoConAsignacion(reserva, asignaciones)) {
+
+                reserva.marcarPendiente(
+                        "El horario coincide con una asignación de materia. "
+                                + "Requiere revisión del administrador."
+                );
+
+            } else {
+
+                long superposiciones = reservaRepositorio.contarSuperposiciones(
+                        espacioId, fecha, horaInicio, horaFin
+                );
+
+                if (superposiciones > 0) {
+                    reserva.marcarPendiente(
+                            "El espacio ya tiene una reserva confirmada "
+                                    + "en ese horario. Requiere revisión del administrador."
+                    );
+                }
+            }
+        }
+
         return reservaRepositorio.save(reserva);
+    }
+
+    /**
+     * Procesa las reservas pendientes al comenzar la cursada.
+     * Las reservas se confirman solamente si no entran en conflicto
+     * con asignaciones activas ni con otras reservas confirmadas.
+     */
+    public ResultadoReservas procesarPendientes() {
+
+        if (configuracionService.obtenerModoActual()
+                != ModoFuncionamiento.CURSADA) {
+            throw new IllegalStateException(
+                    "Las reservas solo pueden procesarse durante el período de cursada."
+            );
+        }
+
+        List<Reserva> reservas = reservaRepositorio
+                .findAllByOrderByFechaAscHoraInicioAsc();
+
+        List<Asignacion> asignaciones = asignacionRepositorio.findAll();
+
+        int confirmadas = 0;
+        int pendientes = 0;
+
+        for (Reserva reserva : reservas) {
+
+            if (!"PENDIENTE".equals(reserva.getEstado())) {
+                continue;
+            }
+
+            // No confirmar automáticamente reservas vencidas.
+            if (reserva.getFecha().isBefore(LocalDate.now())
+                    || (reserva.getFecha().equals(LocalDate.now())
+                    && !reserva.getHoraFin().isAfter(LocalTime.now()))) {
+                pendientes++;
+                continue;
+            }
+
+            if (tieneConflictoConAsignacion(reserva, asignaciones)) {
+                reserva.marcarPendiente(
+                        "El horario coincide con una asignación de materia. "
+                                + "Requiere revisión del administrador."
+                );
+                reservaRepositorio.save(reserva);
+                pendientes++;
+                continue;
+            }
+
+            long superposiciones = reservaRepositorio.contarSuperposiciones(
+                    reserva.getEspacio().getId(),
+                    reserva.getFecha(),
+                    reserva.getHoraInicio(),
+                    reserva.getHoraFin()
+            );
+
+            if (superposiciones > 0) {
+                reserva.marcarPendiente(
+                        "El horario coincide con otra reserva confirmada. "
+                                + "Requiere revisión del administrador."
+                );
+                reservaRepositorio.save(reserva);
+                pendientes++;
+                continue;
+            }
+
+            reserva.confirmar();
+            reservaRepositorio.save(reserva);
+            confirmadas++;
+        }
+
+        return new ResultadoReservas(confirmadas, pendientes);
+    }
+
+    /**
+     * Comprueba si una reserva puntual coincide con una asignación semanal activa.
+     */
+    private boolean tieneConflictoConAsignacion(
+            Reserva reserva,
+            List<Asignacion> asignaciones) {
+
+        for (Asignacion asignacion : asignaciones) {
+
+            if (asignacion == null || !asignacion.estaActiva()) {
+                continue;
+            }
+
+            if (!asignacion.getEspacio().getId()
+                    .equals(reserva.getEspacio().getId())) {
+                continue;
+            }
+
+            if (!asignacion.getDiasAsignados()
+                    .contains(reserva.getFecha().getDayOfWeek())) {
+                continue;
+            }
+
+            boolean seSuperpone =
+                    asignacion.getHoraInicioAsignada()
+                            .isBefore(reserva.getHoraFin())
+                            && asignacion.getHoraFinAsignada()
+                            .isAfter(reserva.getHoraInicio());
+
+            if (seSuperpone) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public record ResultadoReservas(
+            int confirmadas,
+            int pendientes) {
     }
 
     // El administrador ve todas; el profesor, solamente las propias.
@@ -113,6 +270,8 @@ public class ReservaService {
     }
 
     // El administrador aprueba una solicitud pendiente.
+    // El administrador aprueba una solicitud pendiente.
+    // El administrador aprueba una solicitud pendiente.
     public Reserva aprobar(Long id) {
 
         Reserva reserva = reservaRepositorio.findById(id)
@@ -124,6 +283,15 @@ public class ReservaService {
                     "La solicitud ya no está pendiente.");
         }
 
+        // 1. Comprobar conflictos con asignaciones de materias.
+        List<Asignacion> asignaciones = asignacionRepositorio.findAll();
+
+        if (tieneConflictoConAsignacion(reserva, asignaciones)) {
+            throw new IllegalArgumentException(
+                    "No se puede aprobar: el espacio está ocupado por una asignación de materia en ese horario.");
+        }
+
+        // 2. Comprobar conflictos con otras reservas confirmadas.
         long superposiciones = reservaRepositorio.contarSuperposiciones(
                 reserva.getEspacio().getId(),
                 reserva.getFecha(),
@@ -133,10 +301,10 @@ public class ReservaService {
 
         if (superposiciones > 0) {
             throw new IllegalArgumentException(
-                    "No se puede aprobar: el horario continúa ocupado."
-            );
+                    "No se puede aprobar: el horario continúa ocupado por otra reserva.");
         }
 
+        // 3. Confirmar solamente si pasó ambas verificaciones.
         reserva.confirmar();
 
         return reservaRepositorio.save(reserva);

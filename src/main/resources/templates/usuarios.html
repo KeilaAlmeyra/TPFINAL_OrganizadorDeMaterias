@@ -3,8 +3,8 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Usuarios - Organizador de Materias</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Administración de usuarios</title>
 
     <style>
         * {
@@ -14,26 +14,54 @@
         body {
             margin: 0;
             padding: 30px;
-            background: #E8E0CF;
-            color: #222222;
             font-family: Arial, sans-serif;
+            background: #FFF7E6;
+            color: #2D3A47;
         }
 
         main {
             max-width: 1000px;
-            margin: auto;
+            margin: 0 auto;
         }
 
-        h1, h2 {
-            color: #163A61;
+        h1 {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #2D3A47;
+            font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #65717D;
+            line-height: 1.5;
+        }
+
+        .volver {
+            display: inline-block;
+            margin-bottom: 25px;
+            padding: 12px 19px;
+            background: #A9B7C6;
+            color: #2D3A47;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .volver:hover {
+            background: #91A2B4;
         }
 
         .panel {
             margin-bottom: 25px;
-            padding: 25px;
+            padding: 24px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            border-radius: 14px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
         }
 
         label {
@@ -44,25 +72,31 @@
 
         input {
             width: 100%;
-            padding: 11px;
-            border: 1px solid #bbb;
-            border-radius: 5px;
-            font-size: 15px;
+            padding: 12px;
+            border: 1px solid #D8CEBA;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        input:focus {
+            outline: 2px solid #A9B7C6;
         }
 
         button {
             margin-top: 18px;
-            padding: 11px 20px;
+            padding: 12px 19px;
             border: none;
-            border-radius: 5px;
-            background: #163A61;
-            color: white;
+            border-radius: 8px;
+            background: #A9B7C6;
+            color: #2D3A47;
             cursor: pointer;
-            font-size: 15px;
+            font-size: 14px;
+            font-weight: bold;
         }
 
         button:hover {
-            background: #244e79;
+            background: #91A2B4;
         }
 
         table {
@@ -72,52 +106,87 @@
 
         th, td {
             padding: 12px;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #E8E0CF;
             text-align: left;
         }
 
         th {
-            background: #163A61;
-            color: white;
+            background: #F7C8D3;
+            color: #2D3A47;
+        }
+
+        tbody tr:hover {
+            background: #FFFCF5;
         }
 
         .mensaje {
             margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 5px;
+            padding: 13px 16px;
+            border-radius: 9px;
         }
 
         .error {
-            background: #f8d7da;
-            color: #842029;
+            background: #F7C8D3;
+            color: #8B3947;
         }
 
         .ok {
-            background: #d1e7dd;
-            color: #0f5132;
+            background: #DDEBD5;
+            color: #355B32;
         }
 
-        .volver {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #163A61;
+        .vacio {
+            text-align: center;
+            padding: 24px;
+            color: #65717D;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 15px;
+            }
+
+            .panel {
+                padding: 17px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            th, td {
+                padding: 9px 7px;
+            }
         }
     </style>
 </head>
 
 <body>
+
 <main>
 
-    <a class="volver" th:href="@{/}">← Volver al inicio</a>
+    <a class="volver" th:href="@{/}">Volver al inicio</a>
 
     <h1>Administración de usuarios</h1>
     <p>Desde aquí podés registrar y consultar los profesores del sistema.</p>
 
     <section class="panel">
+
         <h2>Registrar profesor</h2>
 
-        <div th:if="${error}" class="mensaje error" th:text="${error}"></div>
-        <div th:if="${ok}" class="mensaje ok" th:text="${ok}"></div>
+        <div th:if="${error}"
+             class="mensaje error"
+             th:text="${error}">
+        </div>
+
+        <div th:if="${ok}"
+             class="mensaje ok"
+             th:text="${ok}">
+        </div>
 
         <form th:action="@{/usuarios/registrar}" method="post">
 
@@ -149,10 +218,13 @@
             >
 
             <button type="submit">Registrar profesor</button>
+
         </form>
+
     </section>
 
     <section class="panel">
+
         <h2>Usuarios registrados</h2>
 
         <table>
@@ -165,6 +237,7 @@
             </thead>
 
             <tbody>
+
             <tr th:each="usuario : ${usuarios}">
                 <td th:text="${usuario.nombre}"></td>
                 <td th:text="${usuario.correo}"></td>
@@ -172,12 +245,17 @@
             </tr>
 
             <tr th:if="${#lists.isEmpty(usuarios)}">
-                <td colspan="3">Todavía no hay usuarios registrados.</td>
+                <td colspan="3" class="vacio">
+                    Todavía no hay usuarios registrados.
+                </td>
             </tr>
+
             </tbody>
         </table>
+
     </section>
 
 </main>
+
 </body>
 </html>

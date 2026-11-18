@@ -11,9 +11,11 @@
             --crema: #FFF7E6;
             --rosa: #F7C8D3;
             --rojo: #B46A72;
-            --verde: #A8B58A;
+            --verde: #DDEBD5;
             --celeste: #A9B7C6;
             --azul: #2D3A47;
+            --texto-secundario: #65717D;
+            --borde: #E8E0CF;
         }
 
         * {
@@ -21,38 +23,72 @@
         }
 
         body {
-            font-family: "Times New Roman", Times, serif;
-            background-color: var(--crema);
-            color: var(--azul);
             margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--crema);
+            color: var(--azul);
         }
 
+        /* ENCABEZADO */
+
         header {
-            background-color: var(--azul);
-            color: var(--crema);
-            padding: 20px 32px;
+            background: #2D3A47;
+            color: #FFF7E6;
+            padding: 27px 36px;
+            border-bottom: 4px solid #C7A85B;
+        }
+
+        .encabezado-contenido {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .encabezado-etiqueta {
+            display: block;
+            margin-bottom: 8px;
+            color: #D9C58E;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 2px;
         }
 
         header h1 {
-            margin: 0 0 4px 0;
-            font-size: 26px;
+            margin: 0 0 8px;
+            font-size: 29px;
+            font-weight: bold;
         }
 
         header p {
             margin: 0;
-            opacity: 0.85;
+            color: #E8E0CF;
+            font-size: 14px;
+            line-height: 1.5;
+            opacity: 0.95;
         }
+
+        @media (max-width: 600px) {
+            header {
+                padding: 23px 20px;
+            }
+
+            header h1 {
+                font-size: 23px;
+            }
+        }
+
+        /* ESTRUCTURA GENERAL */
 
         .contenedor {
             display: flex;
             min-height: calc(100vh - 88px);
         }
 
-        /* Índice lateral */
+        /* ÍNDICE LATERAL */
+
         aside {
             width: 240px;
             flex-shrink: 0;
-            background-color: var(--celeste);
+            background: var(--celeste);
             padding: 24px 16px;
             display: flex;
             flex-direction: column;
@@ -68,6 +104,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            flex: 1;
         }
 
         .indice a {
@@ -75,13 +112,14 @@
             color: var(--azul);
             text-decoration: none;
             font-weight: bold;
-            padding: 11px 12px;
-            border-radius: 5px;
-            transition: background-color 0.2s;
+            font-size: 14px;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
         }
 
         .indice a:hover {
-            background-color: var(--crema);
+            background: var(--crema);
         }
 
         .indice .separador {
@@ -91,45 +129,267 @@
 
         .indice form {
             margin-top: auto;
+            padding-top: 20px;
         }
 
         .indice button {
             width: 100%;
-            background-color: var(--azul);
+            background: var(--azul);
             color: var(--crema);
             border: none;
-            border-radius: 4px;
-            padding: 10px 12px;
-            font-family: inherit;
-            font-size: 15px;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
         .indice button:hover {
-            background-color: var(--rojo);
+            background: var(--rojo);
             color: white;
         }
 
-        /* Contenido principal */
+        /* CONTENIDO PRINCIPAL */
+
         main {
             flex: 1;
             min-width: 0;
-            max-width: 1100px;
-            margin: 24px auto;
-            padding: 0 24px;
+            max-width: 1250px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px;
         }
 
-        section {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        /* BIENVENIDA */
+
+        .bienvenida {
+            position: relative;
+            overflow: hidden;
+            background: white;
+            border-radius: 14px;
+            padding: 30px;
+            margin-bottom: 28px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+            border-left: 6px solid var(--rojo);
         }
 
-        h2 {
-            margin-top: 0;
+        .bienvenida h2 {
+            margin: 0 0 12px;
+            font-size: 27px;
+            color: var(--azul);
+        }
+
+        .bienvenida p {
+            max-width: 750px;
+            margin: 0;
+            color: var(--texto-secundario);
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        .bienvenida .subtitulo {
+            display: inline-block;
+            margin-bottom: 12px;
             color: var(--rojo);
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* TÍTULOS DE SECCIÓN */
+
+        .titulo-seccion {
+            margin: 0 0 8px;
+            font-size: 21px;
+            color: var(--azul);
+        }
+
+        .descripcion-seccion {
+            margin: 0 0 20px;
+            color: var(--texto-secundario);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* TARJETAS DE ACCESO */
+
+        .accesos {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .tarjeta {
+            display: flex;
+            flex-direction: column;
+            min-height: 175px;
+            padding: 21px;
+            background: white;
+            border: 1px solid var(--borde);
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--azul);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tarjeta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.09);
+        }
+
+        .tarjeta .icono {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            background: var(--crema);
+            font-size: 21px;
+        }
+
+        .tarjeta h3 {
+            margin: 0 0 8px;
+            font-size: 16px;
+        }
+
+        .tarjeta p {
+            margin: 0;
+            color: var(--texto-secundario);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .tarjeta .ir {
+            margin-top: auto;
+            padding-top: 14px;
+            color: var(--rojo);
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* ADMINISTRACIÓN */
+
+        .administracion {
+            margin-top: 10px;
+            margin-bottom: 30px;
+            padding: 24px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .administracion .titulo-seccion {
+            margin-bottom: 8px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .admin-enlace {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            border: 1px solid var(--borde);
+            border-radius: 9px;
+            text-decoration: none;
+            color: var(--azul);
+            background: #FFFCF5;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .admin-enlace:hover {
+            background: var(--crema);
+        }
+
+        .admin-enlace span:first-child {
+            font-size: 19px;
+        }
+
+        /* GUÍA DE FUNCIONAMIENTO */
+
+        .guia {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .pasos {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .paso {
+            display: flex;
+            gap: 13px;
+            align-items: flex-start;
+        }
+
+        .numero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--rosa);
+            color: var(--azul);
+            font-weight: bold;
+        }
+
+        .paso h3 {
+            margin: 2px 0 6px;
+            font-size: 14px;
+        }
+
+        .paso p {
+            margin: 0;
+            color: var(--texto-secundario);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* PIE */
+
+        footer {
+            margin-top: 28px;
+            padding: 18px 10px;
+            border-top: 1px solid var(--borde);
+            text-align: center;
+            color: var(--texto-secundario);
+            font-size: 12px;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1000px) {
+            .accesos {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .admin-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .pasos {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 700px) {
@@ -150,12 +410,48 @@
             .indice form {
                 grid-column: 1 / -1;
                 margin-top: 10px;
+                padding-top: 5px;
             }
 
             main {
-                margin: 16px auto;
-                padding: 0 16px;
-                width: 100%;
+                margin: 0 auto;
+                padding: 20px 16px;
+            }
+
+            .bienvenida {
+                padding: 23px;
+            }
+
+            .bienvenida h2 {
+                font-size: 23px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .accesos,
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tarjeta {
+                min-height: 150px;
+            }
+
+            .bienvenida {
+                padding: 20px;
+            }
+
+            .administracion,
+            .guia {
+                padding: 18px;
             }
         }
 
@@ -170,8 +466,11 @@
 <body>
 
 <header>
-    <h1>Organizador de Espacios</h1>
-    <p>Sistema de organización y reserva de espacios de la facultad.</p>
+    <div class="encabezado-contenido">
+        <span class="encabezado-etiqueta">GESTIÓN ACADÉMICA</span>
+        <h1>Organizador de Espacios Académicos</h1>
+        <p>Plataforma de gestión, asignación y reserva de aulas y espacios de la facultad.</p>
+    </div>
 </header>
 
 <div class="contenedor">
@@ -180,10 +479,10 @@
         <h2>Índice</h2>
 
         <nav class="indice">
+
             <a th:href="@{/consulta-espacios}">
                 Consultar espacios
             </a>
-
 
             <a th:href="@{/prueba-asignaciones}">
                 Solicitar espacio
@@ -204,7 +503,7 @@
             <div th:if="${esAdministrador}" class="separador"></div>
 
             <a th:if="${esAdministrador}" th:href="@{/solicitudes-pendientes}">
-                Gestionar solicitudes
+                Pendientes
             </a>
 
             <a th:if="${esAdministrador}" th:href="@{/configuracion}">
@@ -219,7 +518,6 @@
                 Materias
             </a>
 
-
             <a th:if="${esAdministrador}" th:href="@{/usuarios}">
                 Usuarios
             </a>
@@ -227,19 +525,186 @@
             <form method="post" th:action="@{/logout}">
                 <button type="submit">Cerrar sesión</button>
             </form>
+
         </nav>
     </aside>
 
     <main>
-        <section>
+
+        <!-- BIENVENIDA -->
+        <section class="bienvenida">
+
+            <span class="subtitulo">Panel principal</span>
+
             <h2>Bienvenido al Organizador de Espacios</h2>
 
             <p>
-                Seleccioná una opción del índice para consultar espacios,
-                realizar reservas o solicitar la asignación de aulas
-                para el cuatrimestre.
+                Desde este sistema podés consultar los espacios disponibles
+                de la facultad, solicitar aulas para el cursado de materias
+                y gestionar reservas. También podés consultar el estado
+                de tus solicitudes y hacer un seguimiento de cada asignación.
             </p>
+
         </section>
+
+        <!-- ACCESOS PRINCIPALES -->
+        <section>
+
+            <h2 class="titulo-seccion">Accesos principales</h2>
+
+            <p class="descripcion-seccion">
+                Elegí qué tarea querés realizar.
+            </p>
+
+            <div class="accesos">
+
+                <a class="tarjeta" th:href="@{/consulta-espacios}">
+                    <div class="icono">🏫</div>
+                    <h3>Consultar espacios</h3>
+                    <p>
+                        Explorá los espacios de la facultad y consultá
+                        sus características y capacidades.
+                    </p>
+                    <span class="ir">Ver espacios →</span>
+                </a>
+
+                <a class="tarjeta" th:href="@{/prueba-asignaciones}">
+                    <div class="icono">📚</div>
+                    <h3>Solicitar espacio</h3>
+                    <p>
+                        Solicitá un aula para el cursado de una materia,
+                        indicando días, horarios y cantidad de alumnos.
+                    </p>
+                    <span class="ir">Realizar solicitud →</span>
+                </a>
+
+                <a class="tarjeta" th:href="@{/mis-asignaciones}">
+                    <div class="icono">📋</div>
+                    <h3>Mis solicitudes</h3>
+                    <p>
+                        Consultá tus solicitudes, revisá sus estados
+                        y gestioná las asignaciones disponibles.
+                    </p>
+                    <span class="ir">Consultar solicitudes →</span>
+                </a>
+
+                <a class="tarjeta" th:href="@{/reservar}">
+                    <div class="icono">📅</div>
+                    <h3>Solicitar reserva</h3>
+                    <p>
+                        Realizá una solicitud para reservar un espacio
+                        en una fecha y horario determinados.
+                    </p>
+                    <span class="ir">Reservar espacio →</span>
+                </a>
+
+                <a class="tarjeta" th:href="@{/mis-reservas}">
+                    <div class="icono">🗂️</div>
+                    <h3>Mis reservas</h3>
+                    <p>
+                        Consultá tus reservas y revisá si fueron
+                        confirmadas, rechazadas o siguen pendientes.
+                    </p>
+                    <span class="ir">Ver mis reservas →</span>
+                </a>
+
+            </div>
+
+        </section>
+
+        <!-- ACCESOS DE ADMINISTRACIÓN -->
+        <section th:if="${esAdministrador}" class="administracion">
+
+            <h2 class="titulo-seccion">Administración del sistema</h2>
+
+            <p class="descripcion-seccion">
+                Accesos para gestionar las solicitudes, los espacios,
+                las materias y los usuarios registrados.
+            </p>
+
+            <div class="admin-grid">
+
+                <a class="admin-enlace" th:href="@{/solicitudes-pendientes}">
+                    <span>⏳</span>
+                    <span>Solicitudes pendientes</span>
+                </a>
+
+                <a class="admin-enlace" th:href="@{/configuracion}">
+                    <span>⚙️</span>
+                    <span>Configuración académica</span>
+                </a>
+
+                <a class="admin-enlace" th:href="@{/espacios}">
+                    <span>🏢</span>
+                    <span>Administrar espacios</span>
+                </a>
+
+                <a class="admin-enlace" th:href="@{/materias}">
+                    <span>📖</span>
+                    <span>Administrar materias</span>
+                </a>
+
+                <a class="admin-enlace" th:href="@{/usuarios}">
+                    <span>👥</span>
+                    <span>Administrar usuarios</span>
+                </a>
+
+            </div>
+
+        </section>
+
+        <!-- GUÍA DE FUNCIONAMIENTO -->
+        <section class="guia">
+
+            <h2 class="titulo-seccion">¿Cómo funciona el sistema?</h2>
+
+            <p class="descripcion-seccion">
+                Una guía rápida para realizar las operaciones principales.
+            </p>
+
+            <div class="pasos">
+
+                <div class="paso">
+                    <div class="numero">1</div>
+                    <div>
+                        <h3>Consultá los espacios</h3>
+                        <p>
+                            Revisá los espacios disponibles y sus
+                            características antes de realizar una solicitud.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="paso">
+                    <div class="numero">2</div>
+                    <div>
+                        <h3>Realizá una solicitud</h3>
+                        <p>
+                            Indicá la materia o el espacio que necesitás,
+                            junto con los días y horarios correspondientes.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="paso">
+                    <div class="numero">3</div>
+                    <div>
+                        <h3>Consultá el resultado</h3>
+                        <p>
+                            Hacé un seguimiento de tus solicitudes
+                            y revisá las asignaciones o reservas registradas.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <footer>
+            Organizador de Espacios · Sistema de gestión de aulas y reservas
+        </footer>
+
     </main>
 
 </div>

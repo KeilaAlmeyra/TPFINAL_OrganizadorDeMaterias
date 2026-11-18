@@ -253,7 +253,7 @@
 
         .volver {
             display: inline-block;
-            margin-top: 25px;
+            margin-bottom: 25px;
             padding: 12px 19px;
             background: #A9B7C6;
             color: #2D3A47;
@@ -303,6 +303,10 @@
 
 <body>
 <div class="contenedor">
+
+    <a th:href="@{/}" class="volver">
+        Volver al inicio
+    </a>
 
     <!-- ENCABEZADO -->
     <h1 th:text="${esAdministrador
@@ -529,9 +533,6 @@
         </div>
     </section>
 
-    <a th:href="@{/}" class="volver">
-        Volver al inicio
-    </a>
 
 </div>
 </body>

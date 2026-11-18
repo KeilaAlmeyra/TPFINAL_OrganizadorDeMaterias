@@ -9,6 +9,7 @@ import organizador.servicios.AsignadorService;
 import organizador.servicios.ConfiguracionService;
 import organizador.servicios.GestorEspacios;
 import organizador.servicios.GestorPropuestas;
+import organizador.servicios.ReservaService;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
@@ -33,19 +34,22 @@ public class AsignacionController {
     private final GestorEspacios gestorEspacios;
     private final GestorPropuestas gestorPropuestas;
     private final ConfiguracionService configuracionService;
+    private final ReservaService reservaService;
 
     public AsignacionController(
             AsignadorService asignador,
             UsuarioRepository usuarios,
             GestorEspacios gestorEspacios,
             GestorPropuestas gestorPropuestas,
-            ConfiguracionService configuracionService) {
+            ConfiguracionService configuracionService,
+            ReservaService reservaService) {
 
         this.asignador = asignador;
         this.usuarios = usuarios;
         this.gestorEspacios = gestorEspacios;
         this.gestorPropuestas = gestorPropuestas;
         this.configuracionService = configuracionService;
+        this.reservaService = reservaService;
     }
 
     private Usuario obtenerUsuarioActual(Authentication authentication) {
@@ -580,14 +584,23 @@ public class AsignacionController {
                 );
             }
 
+            // Primero se procesan las solicitudes de materias.
             AsignadorService.ResultadoProcesamiento resultado =
                     asignador.procesarPendientes();
+
+            // Después se procesan las reservas puntuales.
+            ReservaService.ResultadoReservas resultadoReservas =
+                    reservaService.procesarPendientes();
 
             mensajes.addFlashAttribute(
                     "ok",
                     "Procesamiento terminado: "
-                            + resultado.aprobadas() + " aprobadas y "
-                            + resultado.rechazadas() + " rechazadas."
+                            + resultado.aprobadas() + " solicitudes aprobadas y "
+                            + resultado.rechazadas() + " rechazadas. "
+                            + resultadoReservas.confirmadas()
+                            + " reservas confirmadas y "
+                            + resultadoReservas.pendientes()
+                            + " reservas pendientes de revisión."
             );
 
         } catch (IllegalStateException e) {

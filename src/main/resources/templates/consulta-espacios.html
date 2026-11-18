@@ -7,105 +7,182 @@
     <title>Consultar espacios</title>
 
     <style>
-        :root {
-            --crema: #FFF7E6;
-            --rosa: #F7C8D3;
-            --rojo: #B46A72;
-            --celeste: #A9B7C6;
-            --azul: #2D3A47;
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: "Times New Roman", Times, serif;
-            background: var(--crema);
-            color: var(--azul);
             margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #FFF7E6;
+            color: #2D3A47;
         }
 
-        header {
-            background: var(--azul);
-            color: var(--crema);
-            padding: 20px 32px;
+        .contenedor {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        header a {
-            color: var(--crema);
-        }
-
-        main {
-            max-width: 900px;
-            margin: 24px auto;
-            padding: 0 16px;
-        }
-
-        section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px 24px;
+        h1 {
+            margin: 0 0 8px;
+            font-size: 30px;
         }
 
         h2 {
-            color: var(--rojo);
+            margin: 0 0 20px;
+            font-size: 22px;
+        }
+
+        .descripcion {
+            color: #65717D;
+            line-height: 1.5;
+            margin: 0 0 24px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        /* VOLVER AL INICIO */
+
+        .volver {
+            display: inline-block;
+            margin-bottom: 25px;
+            padding: 12px 19px;
+            background: #A9B7C6;
+            color: #2D3A47;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .volver:hover {
+            background: #91A2B4;
+        }
+
+        /* TABLA */
+
+        .tabla-contenedor {
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
+            min-width: 600px;
             border-collapse: collapse;
         }
 
         th, td {
-            padding: 10px;
+            padding: 14px 12px;
             text-align: left;
-            border-bottom: 1px solid var(--celeste);
+            border-bottom: 1px solid #E8E0CF;
         }
 
         th {
-            background: var(--rosa);
+            background: #F7C8D3;
+            color: #2D3A47;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #FFFCF5;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* SIN REGISTROS */
+
+        .vacio {
+            text-align: center;
+            padding: 30px 15px;
+            color: #65717D;
+            background: #FFFCF5;
+            border: 1px dashed #D8CEBA;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 550px) {
+            body {
+                padding: 15px;
+            }
+
+            .panel {
+                padding: 17px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<header>
-    <h1>Consultar espacios</h1>
-    <p>Consultá las aulas y los espacios disponibles de la facultad.</p>
-    <a th:href="@{/}">Volver al inicio</a>
-</header>
+<div class="contenedor">
 
-<main>
-    <section>
+    <!-- VOLVER AL INICIO -->
+    <a th:href="@{/}" class="volver">
+        Volver al inicio
+    </a>
+
+    <!-- ENCABEZADO -->
+    <h1>Consultar espacios</h1>
+
+    <p class="descripcion">
+        Consultá las aulas y los espacios disponibles de la facultad.
+    </p>
+
+    <!-- ESPACIOS REGISTRADOS -->
+    <section class="panel">
+
         <h2>Espacios registrados</h2>
 
-        <table>
-            <thead>
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Capacidad</th>
-                <th>Estado</th>
-            </tr>
-            </thead>
+        <div th:if="${#lists.isEmpty(espacios)}"
+             class="vacio">
+            Todavía no hay espacios registrados.
+        </div>
 
-            <tbody>
-            <tr th:each="espacio : ${espacios}">
-                <td th:text="${espacio.id}"></td>
-                <td th:text="${espacio.nombre}"></td>
-                <td th:text="${espacio.tipoEspacio}"></td>
-                <td th:text="${espacio.capacidadMaxima}"></td>
-                <td th:text="${espacio.estado}"></td>
-            </tr>
+        <div class="tabla-contenedor"
+             th:unless="${#lists.isEmpty(espacios)}">
 
-            <tr th:if="${#lists.isEmpty(espacios)}">
-                <td colspan="5">
-                    Todavía no hay espacios registrados.
-                </td>
-            </tr>
-            </tbody>
-        </table>
+            <table>
+                <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Tipo</th>
+                    <th>Capacidad</th>
+                    <th>Estado</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="espacio : ${espacios}">
+                    <td th:text="${espacio.id}"></td>
+                    <td th:text="${espacio.nombre}"></td>
+                    <td th:text="${espacio.tipoEspacio}"></td>
+                    <td th:text="${espacio.capacidadMaxima}"></td>
+                    <td th:text="${espacio.estado}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+
     </section>
-</main>
+
+</div>
 
 </body>
 </html>
