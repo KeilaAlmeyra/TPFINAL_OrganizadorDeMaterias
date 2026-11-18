@@ -23,6 +23,24 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
 
+/**
+ * Controlador de las solicitudes de espacio y de su asignación.
+ * Es el circuito pensado para la planificación de la cursada: el profesor pide un espacio
+ * para ciertos días de la semana< y un horario (a diferencia de {@code ReservaController},
+ * que trabaja con una fecha concreta).
+ * El resultado depende del modo de funcionamiento del sistema, que se calcula según la
+ * fecha actual y la configuración del período ({@code ConfiguracionService}):
+ * {@code RECEPCION_SOLICITUDES}: la solicitud queda pendiente hasta que termine la recepción.</li>
+ * {@code CURSADA}: la solicitud se evalúa en el momento.
+ * {@code FUERA_DE_PERIODO}: no se aceptan solicitudes.
+ * Para decidir quién se queda con cada espacio, las solicitudes se ordenan por año de
+ * carrera y puntaje de prioridad, y Prolog comprueba la compatibilidad y la disponibilidad.
+ * Si no hay lugar, el administrador puede crear una propuesta alternativa que el
+ * profesor acepta o rechaza.
+ * Los mensajes de éxito ({@code ok}) y de error ({@code error}) se envían con
+ * {@code RedirectAttributes.addFlashAttribute}: viven hasta la próxima pantalla
+ * y se muestran una sola vez.
+ */
 @Controller
 public class AsignacionController {
 
@@ -44,6 +62,13 @@ public class AsignacionController {
 
     }
 
+    /**
+     * Busca en la base de datos al usuario que tiene la sesión iniciada.
+     *
+     * @param authentication datos de la sesión; su nombre es el correo del usuario
+     * @return el usuario autenticado
+     * @throws IllegalStateException si el usuario de la sesión no existe
+     */
     private Usuario obtenerUsuarioActual(Authentication authentication) {
         return usuarios.findByCorreoIgnoreCase(authentication.getName())
                 .orElseThrow(() ->
@@ -52,6 +77,23 @@ public class AsignacionController {
                         ));
     }
 
+
+    /**
+     * Muestra la pantalla de solicitudes y asignaciones.
+     * Ruta: {@code GET /prueba-asignaciones}. Acceso: profesores y administradores.
+     * Datos que se envían a la plantilla:
+     * {@code profesores}: todos, si es administrador; solo el propio usuario, si es profesor.</li>
+     * {@code materias}: materias registradas.
+     * {@code solicitudes}: todas, si es administrador; solo las propias, si es profesor.</li>
+     * {@code actividades}: tipos de actividad que se pueden elegir (final, parcial, etc.).</li>
+     * {@code esAdministrador} y {@code usuario}.
+     * Solo para el administrador, además: {@code solicitudesPendientes} y
+     * {@code espaciosDisponibles}, que se usan para proponer alternativas.
+     *
+     * @param authentication datos de la sesión
+     * @param model datos que se envían a la plantilla
+     * @return nombre de la plantilla de solicitudes y asignaciones
+     */
     @GetMapping("/prueba-asignaciones")
     public String mostrar(
             Authentication authentication,
@@ -100,10 +142,19 @@ public class AsignacionController {
             );
         }
 
-        return "prueba-asignaciones";
+        return "asignaciones";
     }
 
-
+    /**
+     * Muestra las asignaciones confirmadas y las propuestas recibidas.
+     * Ruta: {@code GET /mis-asignaciones}. Un profesor ve sus asignaciones y las propuestas
+     * alternativas que le hizo el administrador; el administrador ve todas las asignaciones
+     * (y ninguna propuesta, porque no las responde).
+     *
+     * @param authentication datos de la sesión
+     * @param model datos que se envían a la plantilla
+     * @return nombre de la plantilla {@code mis-asignaciones}
+     */
     @GetMapping("/mis-asignaciones")
     public String mostrarMisAsignaciones(
             Authentication authentication,
@@ -133,7 +184,21 @@ public class AsignacionController {
         return "mis-asignaciones";
     }
 
-
+    /**
+     * Crea una propuesta alternativa para una solicitud pendiente.
+     * Ruta: {@code POST /propuestas/crear}. Acceso: solo administradores. Se usa cuando la
+     * solicitud no pudo asignarse: el administrador sugiere otro espacio, otros días u otro
+     * horario. Antes de guardarla, el servicio comprueba con Prolog que el espacio sea
+     * compatible y esté libre en esos días y horas.
+     *
+     * @param solicitudId identificador de la solicitud pendiente
+     * @param espacioId código del espacio propuesto
+     * @param dias días de la semana propuestos
+     * @param horaInicio hora de inicio propuesta ({@code HH:MM})
+     * @param horaFin hora de fin propuesta ({@code HH:MM})
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a la pantalla de solicitudes; a {@code /} si el usuario no es administrador
+     */
     @PostMapping("/propuestas/crear")
     public String crearPropuesta(
             Authentication authentication,
@@ -176,9 +241,20 @@ public class AsignacionController {
             mensajes.addFlashAttribute("error", e.getMessage());
         }
 
-        return "redirect:/prueba-asignaciones";
+        return "redirect:/asignaciones";
     }
 
+    /**
+     * El profesor acepta una propuesta alternativa.
+     * Ruta: {@code POST /propuestas/{id}/aceptar}. Solo el profesor dueño de la solicitud puede
+     * responderla; el administrador no. Antes de confirmar se vuelve a comprobar que el espacio
+     * siga libre. Si todo esta bien, se genera la asignación definitiva.
+     *
+     * @param id identificador de la propuesta
+     * @param authentication datos de la sesión
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a {@code /mis-asignaciones}
+     */
     @PostMapping("/propuestas/{id}/aceptar")
     public String aceptarPropuesta(
             @PathVariable String id,
@@ -208,7 +284,16 @@ public class AsignacionController {
         return "redirect:/mis-asignaciones";
     }
 
-
+    /**
+     * El profesor rechaza una propuesta alternativa.
+     * Ruta: {@code POST /propuestas/{id}/rechazar}. La solicitud original no se modifica: sigue
+     * pendiente a la espera de otra opción.
+     *
+     * @param id identificador de la propuesta
+     * @param authentication datos de la sesión
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a {@code /mis-asignaciones}
+     */
     @PostMapping("/propuestas/{id}/rechazar")
     public String rechazarPropuesta(
             @PathVariable String id,
@@ -238,7 +323,26 @@ public class AsignacionController {
         return "redirect:/mis-asignaciones";
     }
 
-    @PostMapping("/prueba-asignaciones/solicitar")
+    /**
+     * Presenta una solicitud de espacio.
+     * Ruta: {@code POST /prueba-asignaciones/solicitar}. Acceso: profesores y administradores.
+     * Un profesor siempre solicita a su nombre, aunque intente enviar otro identificador; el
+     * administrador debe elegir el profesor. El mensaje final depende del modo del sistema:
+     * en recepción queda pendiente; en cursada se evalúa de inmediato.
+     * Los días son opcionales en la firma ({@code required = false}) para que la validación
+     * del servicio responda "Debe seleccionar al menos un día" en lugar de un error genérico.
+     *
+     * @param profesorId profesor solicitante (solo lo usa el administrador)
+     * @param materiaId código de la materia
+     * @param cantidadAlumnos cantidad de alumnos esperados
+     * @param dias días de la semana
+     * @param horaInicio hora de inicio ({@code HH:MM})
+     * @param horaFin hora de fin ({@code HH:MM})
+     * @param tipoActividad tipo de actividad (final, parcial, recuperatorio, clase obligatoria o regular)
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a la pantalla de solicitudes
+     */
+    @PostMapping("/asignaciones/solicitar")
     public String solicitar(
             Authentication authentication,
 
@@ -261,8 +365,6 @@ public class AsignacionController {
         try {
             Usuario usuario = obtenerUsuarioActual(authentication);
 
-            // El profesor no puede elegir otra identidad.
-            // El administrador sí puede seleccionar al profesor.
             String idProfesor = usuario.esAdministrador()
                     ? profesorId
                     : usuario.getId();
@@ -303,10 +405,20 @@ public class AsignacionController {
             mensajes.addFlashAttribute("error", e.getMessage());
         }
 
-        return "redirect:/prueba-asignaciones";
+        return "redirect:/asignaciones";
     }
 
-    @PostMapping("/prueba-asignaciones/procesar")
+    /**
+     * Procesa todas las solicitudes pendientes juntas.
+     * Ruta: {@code POST /prueba-asignaciones/procesar}. Acceso: solo administradores. Solo
+     * funciona en modo {@code CURSADA}, es decir, una vez cerrada la recepción. Las solicitudes
+     * se ordenan por prioridad y se asignan una por una; las que no encuentran espacio se
+     * rechazan. Se informa cuántas se aprobaron y cuántas se rechazaron.
+     *
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a la pantalla de solicitudes
+     */
+    @PostMapping("/asignaciones/procesar")
     public String procesar(RedirectAttributes mensajes) {
 
         try {
@@ -324,10 +436,20 @@ public class AsignacionController {
             mensajes.addFlashAttribute("error", e.getMessage());
         }
 
-        return "redirect:/prueba-asignaciones";
+        return "redirect:/asignaciones";
     }
 
-    @PostMapping("/prueba-asignaciones/reintentar")
+    /**
+     * Vuelve a intentar asignar las solicitudes pendientes.
+     * Ruta: {@code POST /prueba-asignaciones/reintentar}. Acceso: solo administradores. Solo
+     * funciona en modo {@code CURSADA}. A diferencia de {@link #procesar}, las solicitudes que
+     * siguen sin espacio no se rechazan: permanecen pendientes para un próximo intento
+     * (por ejemplo, si se liberó un lugar).
+     *
+     * @param mensajes mensajes que se muestran después de la redirección
+     * @return redirección a la pantalla de solicitudes
+     */
+    @PostMapping("/asignaciones/reintentar")
     public String reintentar(RedirectAttributes mensajes) {
 
         try {
@@ -346,6 +468,6 @@ public class AsignacionController {
             mensajes.addFlashAttribute("error", e.getMessage());
         }
 
-        return "redirect:/prueba-asignaciones";
+        return "redirect:/asignaciones";
     }
 }
