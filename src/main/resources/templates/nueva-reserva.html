@@ -202,6 +202,15 @@
                 </option>
             </select>
 
+            <label for="tipoActividad">Tipo de actividad</label>
+            <select id="tipoActividad" name="tipoActividad" required>
+                <option value="">Elegí el tipo de actividad</option>
+                <option th:each="tipo : ${tiposActividad}"
+                        th:value="${tipo}"
+                        th:text="${tipo.descripcion}">
+                </option>
+            </select>
+
             <label for="fecha">Fecha</label>
             <input type="date" id="fecha" name="fecha"
                    th:min="${hoy}" required>

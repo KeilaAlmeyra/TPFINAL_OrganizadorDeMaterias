@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -24,6 +26,9 @@ public class Reserva {
     private LocalDate fecha;
     private LocalTime horaInicio;
     private LocalTime horaFin;
+    @Enumerated(EnumType.STRING)
+    private TipoActividad tipoActividad;
+
 
     // Nombre que se muestra en pantalla.
     private String reservadoPor;
@@ -39,17 +44,19 @@ public class Reserva {
 
     protected Reserva() {}
 
-    public Reserva(Espacio espacio, LocalDate fecha,
-                   LocalTime horaInicio, LocalTime horaFin,
-                   String reservadoPor) {
-
-        this(espacio, fecha, horaInicio, horaFin,
-                reservadoPor, null);
-    }
 
     public Reserva(Espacio espacio, LocalDate fecha,
                    LocalTime horaInicio, LocalTime horaFin,
                    String reservadoPor, String propietarioCorreo) {
+
+        this(espacio, fecha, horaInicio, horaFin,
+                reservadoPor, propietarioCorreo, null);
+    }
+
+    public Reserva(Espacio espacio, LocalDate fecha,
+                   LocalTime horaInicio, LocalTime horaFin,
+                   String reservadoPor, String propietarioCorreo,
+                   TipoActividad tipoActividad) {
 
         if (espacio == null) {
             throw new IllegalArgumentException(
@@ -72,6 +79,11 @@ public class Reserva {
                     "Debe indicar quién reserva.");
         }
 
+        if (tipoActividad == null) {
+            throw new IllegalArgumentException(
+                    "Debe seleccionar el tipo de actividad.");
+        }
+
         this.espacio = espacio;
         this.fecha = fecha;
         this.horaInicio = horaInicio;
@@ -82,10 +94,16 @@ public class Reserva {
                 ? null
                 : propietarioCorreo.trim().toLowerCase();
 
-        // Las reservas nuevas comienzan confirmadas.
-        // El servicio podrá cambiarlas a pendientes si hay conflicto.
+        this.tipoActividad = tipoActividad;
         this.estado = "CONFIRMADA";
     }
+
+
+    public TipoActividad getTipoActividad() {
+        return tipoActividad;
+    }
+
+
 
     @PrePersist
     public void establecerEstadoInicial() {

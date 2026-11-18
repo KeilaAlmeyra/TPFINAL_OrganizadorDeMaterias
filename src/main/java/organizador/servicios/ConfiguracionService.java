@@ -128,21 +128,7 @@ public class ConfiguracionService {
         return ModoFuncionamiento.FUERA_DE_PERIODO;
     }
 
-    /**
-     * Indica si la fecha corresponde al intervalo de planificación inicial.
-     * Es posterior al cierre de recepción y anterior al inicio de cursada.
-     */
-    public boolean estaEnPlanificacionInicial(LocalDate fecha) {
 
-        if (fecha == null) {
-            throw new IllegalArgumentException("La fecha no puede ser nula");
-        }
-
-        Configuracion configuracion = obtenerConfiguracion();
-
-        return fecha.isAfter(configuracion.getFechaFinRecepcion())
-                && fecha.isBefore(configuracion.getFechaInicioCursada());
-    }
     public Configuracion guardarConfiguracion(
             Configuracion configuracion) {
 

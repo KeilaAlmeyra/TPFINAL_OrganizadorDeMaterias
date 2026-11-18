@@ -195,6 +195,7 @@
             <tr>
                 <th>Código</th>
                 <th>Espacio</th>
+                <th>Tipo de actividad</th>
                 <th>Fecha</th>
                 <th>Horario</th>
                 <th>Reservado por</th>
@@ -209,6 +210,10 @@
                 <td th:text="|R-${reserva.id}|"></td>
 
                 <td th:text="${reserva.espacio.nombre}"></td>
+
+                <td th:text="${reserva.tipoActividad != null
+                    ? reserva.tipoActividad.descripcion
+                    : 'Sin especificar'}"></td>
 
                 <td th:text="${#temporals.format(reserva.fecha, 'dd/MM/yyyy')}"></td>
 
@@ -240,7 +245,7 @@
             </tr>
 
             <tr th:if="${#lists.isEmpty(reservas)}">
-                <td colspan="8" class="vacio">
+                <td colspan="9" class="vacio">
                     No hay reservas ni solicitudes para mostrar.
                 </td>
             </tr>

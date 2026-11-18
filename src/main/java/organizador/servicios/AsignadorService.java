@@ -112,13 +112,18 @@ public class AsignadorService {
      * Obtiene la capacidad máxima de los espacios disponibles
      * compatibles con el tipo requerido por una materia.
      */
+    /**
+     * Obtiene la capacidad máxima de todos los espacios
+     * compatibles con el tipo requerido por una materia,
+     * independientemente de que estén ocupados.
+     */
     public int obtenerCapacidadMaximaDisponible(String idMateria) {
 
         Materia materia = materias.findById(idMateria)
                 .orElseThrow(() ->
                         new IllegalArgumentException("Materia inexistente."));
 
-        return gestorEspacios.obtenerDisponibles().stream()
+        return gestorEspacios.obtenerEspacios().stream()
                 .filter(espacio -> espacio.esDelTipo(
                         materia.getTipoEspacioFrecuente()))
                 .mapToInt(Espacio::getCapacidadMaxima)
@@ -199,15 +204,11 @@ public class AsignadorService {
 
         int capacidadMaxima = obtenerCapacidadMaximaDisponible(idMateria);
 
-        if (capacidadMaxima == 0) {
+// Si existen espacios compatibles, se controla el máximo permitido.
+// Si todavía no existe ninguno, la solicitud puede quedar pendiente.
+        if (capacidadMaxima > 0 && cantidadAlumnos > capacidadMaxima) {
             throw new IllegalArgumentException(
-                    "No hay espacios disponibles compatibles con esta materia."
-            );
-        }
-
-        if (cantidadAlumnos > capacidadMaxima) {
-            throw new IllegalArgumentException(
-                    "La cantidad de alumnos supera la capacidad máxima disponible "
+                    "La cantidad de alumnos supera la capacidad máxima "
                             + "para esta materia (" + capacidadMaxima + ")."
             );
         }
@@ -244,75 +245,15 @@ public class AsignadorService {
         solicitudes.save(solicitud);
 
         if (modo == ModoFuncionamiento.CURSADA) {
-            // Durante la cursada se evalúa solamente esta solicitud.
-            procesarSolicitudIndividual(solicitud);
+            // Durante la cursada se procesan todas las solicitudes pendientes
+            // respetando el orden de prioridad.
+            procesarPendientes();
         }
 
         // En recepción queda pendiente hasta el cierre.
         return modo;
     }
 
-    /**
-     * Objetivo:
-     * Evaluar de forma aislada una única solicitud durante el período de cursada, asignándole un espacio
-     * compatible mediante Prolog si la disponibilidad lo permite.
-     *
-     * Precondiciones:
-     * - La solicitud debe estar instanciada y persistida previamente.
-     * - Los servicios auxiliares y la base de datos deben estar disponibles.
-     *
-     * Parámetros:
-     * @param solicitud Entidad {@link Solicitud} individual que se desea evaluar y asignar.
-     *
-     * Retorno:
-     * Ninguno (método {@code void}).
-     *
-     * Postcondiciones:
-     * - La solicitud actualiza su puntaje de prioridad secundario.
-     * - Si Prolog encuentra un espacio compatible y disponible, se crea y persiste una nueva {@link Asignacion}
-     *   y se actualiza el estado de la solicitud.
-     * - Si no se encuentra espacio disponible, la solicitud permanece guardada en estado pendiente.
-     */
-    private void procesarSolicitudIndividual(Solicitud solicitud) {
-
-        List<RegistroCumplimiento> historial = cumplimientos.findAll();
-
-        solicitud.setPuntajePrioridad(
-                calculadorPrioridad.calcularPuntajePrioridad(
-                        solicitud, historial
-                )
-        );
-
-        List<Espacio> espacios = gestorEspacios.obtenerEspacios();
-
-        List<Asignacion> ocupadas = new ArrayList<>(
-                asignaciones.findAll()
-        );
-
-        List<Reserva> reservasDirectas = reservas.findAll();
-
-        Espacio elegido = prologService.buscarEspacioCompatible(
-                solicitud,
-                espacios,
-                ocupadas,
-                reservasDirectas
-        );
-
-        if (elegido == null) {
-            // Permanece pendiente para una futura revisión.
-            solicitudes.save(solicitud);
-            return;
-        }
-
-        Asignacion asignacion = gestorAsignaciones.crearAsignacion(
-                UUID.randomUUID().toString(),
-                solicitud,
-                elegido
-        );
-
-        solicitudes.save(solicitud);
-        asignaciones.save(asignacion);
-    }
 
     /**
      * Objetivo:

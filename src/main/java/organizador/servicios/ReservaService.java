@@ -1,11 +1,8 @@
 
 package organizador.servicios;
 
-import organizador.modelos.Espacio;
-import organizador.modelos.Reserva;
+import organizador.modelos.*;
 import organizador.repositorios.ReservaRepository;
-import organizador.modelos.Asignacion;
-import organizador.modelos.ModoFuncionamiento;
 import organizador.repositorios.AsignacionRepository;
 import org.springframework.stereotype.Service;
 
@@ -36,9 +33,28 @@ public class ReservaService {
         this.configuracionService = configuracionService;
     }
 
-    public Reserva reservar(String espacioId, LocalDate fecha,
-                            LocalTime horaInicio, LocalTime horaFin,
-                            String reservadoPor, String propietarioCorreo) {
+    private boolean estaVencida(Reserva reserva) {
+
+        LocalDate hoy = LocalDate.now();
+        LocalTime ahora = LocalTime.now();
+
+        if (reserva.getFecha().isBefore(hoy)) {
+            return true;
+        }
+
+        return reserva.getFecha().equals(hoy)
+                && !reserva.getHoraFin().isAfter(ahora);
+    }
+
+    public Reserva reservar(
+            String espacioId,
+            LocalDate fecha,
+            LocalTime horaInicio,
+            LocalTime horaFin,
+            String reservadoPor,
+            String propietarioCorreo,
+            TipoActividad tipoActividad
+    ) {
 
         if (propietarioCorreo == null || propietarioCorreo.isBlank()) {
             throw new IllegalArgumentException(
@@ -78,13 +94,25 @@ public class ReservaService {
                     "Los horarios deben ser en punto o y media.");
         }
 
+        if (fecha.equals(LocalDate.now())
+                && !horaInicio.isAfter(LocalTime.now())) {
+            throw new IllegalArgumentException(
+                    "No se puede reservar un horario que ya comenzó.");
+        }
+
+        if (tipoActividad == null) {
+            throw new IllegalArgumentException(
+                    "Debe seleccionar el tipo de actividad.");
+        }
+
         Reserva reserva = new Reserva(
                 espacio,
                 fecha,
                 horaInicio,
                 horaFin,
                 reservadoPor,
-                propietarioCorreo
+                propietarioCorreo,
+                tipoActividad
         );
 
         ModoFuncionamiento modo = configuracionService.obtenerModoActual();
@@ -162,10 +190,8 @@ public class ReservaService {
                 continue;
             }
 
-            // No confirmar automáticamente reservas vencidas.
-            if (reserva.getFecha().isBefore(LocalDate.now())
-                    || (reserva.getFecha().equals(LocalDate.now())
-                    && !reserva.getHoraFin().isAfter(LocalTime.now()))) {
+            // No procesar automáticamente reservas vencidas.
+            if (estaVencida(reserva)) {
                 pendientes++;
                 continue;
             }
@@ -269,8 +295,7 @@ public class ReservaService {
                 .findByEstadoOrderByFechaAscHoraInicioAsc("PENDIENTE");
     }
 
-    // El administrador aprueba una solicitud pendiente.
-    // El administrador aprueba una solicitud pendiente.
+
     // El administrador aprueba una solicitud pendiente.
     public Reserva aprobar(Long id) {
 
@@ -278,9 +303,9 @@ public class ReservaService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No se encontró la solicitud."));
 
-        if (!"PENDIENTE".equals(reserva.getEstado())) {
+        if (estaVencida(reserva)) {
             throw new IllegalArgumentException(
-                    "La solicitud ya no está pendiente.");
+                    "No se puede aprobar una reserva cuya fecha u horario ya pasó.");
         }
 
         // 1. Comprobar conflictos con asignaciones de materias.
@@ -322,6 +347,11 @@ public class ReservaService {
                     "La solicitud ya no está pendiente.");
         }
 
+        if (estaVencida(reserva)) {
+            throw new IllegalArgumentException(
+                    "No se puede modificar el estado de una reserva vencida.");
+        }
+
         if (motivo == null || motivo.isBlank()) {
             throw new IllegalArgumentException(
                     "Debe indicar el motivo del rechazo.");
@@ -349,6 +379,10 @@ public class ReservaService {
                             return false;
                         }
 
+                        if (estaVencida(reserva)) {
+                            return false;
+                        }
+
                         reserva.cancelar();
                         reservaRepositorio.save(reserva);
                         return true;
@@ -366,6 +400,10 @@ public class ReservaService {
 
                     if ("CANCELADA".equals(reserva.getEstado())
                             || "RECHAZADA".equals(reserva.getEstado())) {
+                        return false;
+                    }
+
+                    if (estaVencida(reserva)) {
                         return false;
                     }
 

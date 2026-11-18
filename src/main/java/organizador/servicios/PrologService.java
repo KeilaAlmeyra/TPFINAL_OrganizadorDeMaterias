@@ -197,10 +197,6 @@ public class PrologService {
                     StandardCharsets.UTF_8
             );
 
-            System.out.println("===== SCRIPT PROLOG GENERADO =====");
-            System.out.println(contenidoScript);
-            System.out.println("===== FIN SCRIPT PROLOG =====");
-
             Process proceso = new ProcessBuilder(
                     ejecutable,
                     "-q",
@@ -335,9 +331,10 @@ public class PrologService {
             LocalDate hoy = LocalDate.now();
             LocalTime ahora = LocalTime.now();
 
-            LocalDate finCursada = configuracionService
-                    .obtenerConfiguracion()
-                    .getFechaFinCursada();
+            var configuracion = configuracionService.obtenerConfiguracion();
+
+            LocalDate inicioCursada = configuracion.getFechaInicioCursada();
+            LocalDate finCursada = configuracion.getFechaFinCursada();
 
             for (Reserva reserva : reservas) {
 
@@ -349,17 +346,22 @@ public class PrologService {
 
                 LocalDate fechaReserva = reserva.getFecha();
 
-                // Ignora reservas anteriores al día actual.
+// Ignora reservas anteriores al inicio de la cursada.
+                if (fechaReserva.isBefore(inicioCursada)) {
+                    continue;
+                }
+
+// Ignora reservas que ya pasaron.
                 if (fechaReserva.isBefore(hoy)) {
                     continue;
                 }
 
-                // Ignora reservas posteriores a la cursada.
+// Ignora reservas posteriores a la cursada.
                 if (fechaReserva.isAfter(finCursada)) {
                     continue;
                 }
 
-                // Si la reserva es hoy, solo considera las que todavía no terminaron.
+// Si la reserva es hoy, solo considera las que todavía no terminaron.
                 if (fechaReserva.equals(hoy)
                         && !reserva.getHoraFin().isAfter(ahora)) {
                     continue;

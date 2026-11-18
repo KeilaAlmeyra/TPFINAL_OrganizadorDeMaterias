@@ -10,6 +10,7 @@ import organizador.servicios.AsignadorService;
 import organizador.modelos.Espacio;
 import organizador.servicios.GestorPropuestas;
 import organizador.modelos.PropuestaAsignacion;
+import organizador.modelos.TipoActividad;
 
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +91,7 @@ public class ReservaController {
 
         model.addAttribute("usuario", usuario.getNombre());
         model.addAttribute("hoy", LocalDate.now());
+        model.addAttribute("tiposActividad", TipoActividad.values());
 
         return "nueva-reserva";
     }
@@ -129,8 +131,8 @@ public class ReservaController {
      * no del formulario, así nadie puede reservar a nombre de otra persona.
      * Los parámetros son opcionales a propósito ({@code required = false}): si falta alguno,
      * el servicio responde con un mensaje claro en lugar de un error genérico.
-     * Si el espacio ya tiene una reserva confirmada en ese horario, la solicitud no se
-     * descarta: queda {@code PENDIENTE} para que el administrador la revise.
+     * Si el espacio ya tiene una reserva confirmada en ese horario, la solicitud <b>no se
+     * descarta: queda {@code PENDIENTE} para que el administrador la revise
      * Si los datos no cumplen las reglas (fecha pasada, horario fuera de rango, etc.),
      * se vuelve al formulario con el motivo.
      *
@@ -144,6 +146,7 @@ public class ReservaController {
      */
     @PostMapping("/reservar")
     public String reservar(
+            @RequestParam(required = false) TipoActividad tipoActividad,
             @RequestParam(required = false) String espacio,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
@@ -163,7 +166,8 @@ public class ReservaController {
                     horaInicio,
                     horaFin,
                     usuario.getNombre(),
-                    usuario.getCorreo()
+                    usuario.getCorreo(),
+                    tipoActividad
             );
 
             mensajes.addFlashAttribute(
@@ -192,8 +196,7 @@ public class ReservaController {
      * @param authentication datos de la sesión
      * @param mensajes mensajes que se muestran después de la redirección
      * @return redirección a {@code /mis-reservas}
-     */
-    @PostMapping("/reservas/{id}/cancelar")
+     */    @PostMapping("/reservas/{id}/cancelar")
     public String cancelar(
             @PathVariable Long id,
             Authentication authentication,
@@ -263,27 +266,19 @@ public class ReservaController {
                         .filter(s -> Solicitud.PENDIENTE.equals(s.estado()))
                         .toList();
 
-        // Propuestas que ya fueron enviadas y esperan respuesta.
+// Propuestas que ya fueron enviadas y esperan respuesta.
         List<PropuestaAsignacion> propuestasPendientes =
                 gestorPropuestas.obtenerTodasLasPropuestasPendientes();
 
-        // Durante la recepción no se permite gestionar propuestas alternativas.
-        boolean puedeGestionarPropuestas =
-                gestorPropuestas.permiteGestionarPropuestas();
 
-        model.addAttribute(
-                "puedeGestionarPropuestas",
-                puedeGestionarPropuestas
-        );
-
-        // Identificamos las solicitudes que ya tienen una propuesta pendiente.
+// Identificamos las solicitudes que ya tienen una propuesta pendiente.
         List<String> solicitudesConPropuesta =
                 propuestasPendientes.stream()
                         .map(p -> p.getSolicitud().getId())
                         .toList();
 
-        // Solo mostramos para proponer aquellas solicitudes
-        // que todavía no tienen una propuesta esperando respuesta.
+// Solo mostramos para proponer aquellas solicitudes
+// que todavía no tienen una propuesta esperando respuesta.
         List<AsignadorService.FilaSolicitud> pendientes =
                 todasLasPendientes.stream()
                         .filter(s -> !solicitudesConPropuesta.contains(s.id()))
@@ -294,42 +289,37 @@ public class ReservaController {
                 pendientes
         );
 
-        // Enviamos las propuestas pendientes a la segunda sección.
+// Enviamos las propuestas pendientes a la segunda sección.
         model.addAttribute(
                 "propuestasEsperandoRespuesta",
                 propuestasPendientes
         );
 
-        // Cada solicitud disponible para proponer recibe sus espacios compatibles.
+// Cada solicitud disponible para proponer recibe sus espacios compatibles.
         Map<String, List<Espacio>> espaciosPorSolicitud = new HashMap<>();
 
-        if (puedeGestionarPropuestas) {
-            for (AsignadorService.FilaSolicitud solicitud : pendientes) {
-                espaciosPorSolicitud.put(
-                        solicitud.id(),
-                        gestorPropuestas.obtenerEspaciosCompatibles(solicitud.id())
-                );
-            }
+        for (AsignadorService.FilaSolicitud solicitud : pendientes) {
+            espaciosPorSolicitud.put(
+                    solicitud.id(),
+                    gestorPropuestas.obtenerEspaciosCompatibles(solicitud.id())
+            );
         }
 
         model.addAttribute("espaciosPorSolicitud", espaciosPorSolicitud);
 
-        // Espacios compatibles para editar cada propuesta pendiente.
+// Espacios compatibles para editar cada propuesta pendiente.
         Map<String, List<Espacio>> espaciosPorPropuesta = new HashMap<>();
 
-        if (puedeGestionarPropuestas) {
-            for (PropuestaAsignacion propuesta : propuestasPendientes) {
-                espaciosPorPropuesta.put(
-                        propuesta.getId(),
-                        gestorPropuestas.obtenerEspaciosCompatibles(
-                                propuesta.getSolicitud().getId()
-                        )
-                );
-            }
+        for (PropuestaAsignacion propuesta : propuestasPendientes) {
+            espaciosPorPropuesta.put(
+                    propuesta.getId(),
+                    gestorPropuestas.obtenerEspaciosCompatibles(
+                            propuesta.getSolicitud().getId()
+                    )
+            );
         }
 
         model.addAttribute("espaciosPorPropuesta", espaciosPorPropuesta);
-
         // Espacios disponibles para proponer alternativas.
         model.addAttribute(
                 "espaciosDisponibles",
