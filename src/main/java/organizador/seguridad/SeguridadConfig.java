@@ -35,7 +35,6 @@ public class SeguridadConfig {
                         .requestMatchers(
                                 "/prueba-asignaciones/procesar",
                                 "/prueba-asignaciones/reintentar",
-                                "/prueba-asignaciones/cargar-datos",
                                 "/solicitudes-pendientes",
                                 "/reservas/*/aprobar",
                                 "/reservas/*/rechazar",
