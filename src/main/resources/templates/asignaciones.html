@@ -122,20 +122,6 @@
     <p class="mensaje ok" th:if="${ok}" th:text="${ok}"></p>
     <p class="mensaje error" th:if="${error}" th:text="${error}"></p>
 
-    <!-- ACCIÓN EXCLUSIVA DEL ADMINISTRADOR -->
-    <section th:if="${esAdministrador}">
-        <h2>1. Preparar datos de ejemplo</h2>
-
-        <p>
-            Agrega dos profesores, dos materias y un aula de 30 lugares,
-            sin modificar registros que ya existan.
-        </p>
-
-        <form th:action="@{/prueba-asignaciones/cargar-datos}"
-              method="post">
-            <button type="submit">Cargar datos de prueba</button>
-        </form>
-    </section>
 
     <!-- PROFESOR Y ADMINISTRADOR -->
     <section>

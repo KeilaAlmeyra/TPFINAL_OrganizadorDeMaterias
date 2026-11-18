@@ -5,8 +5,7 @@ import organizador.modelos.ModoFuncionamiento;
 import organizador.modelos.Solicitud;
 import organizador.modelos.Usuario;
 import organizador.repositorios.UsuarioRepository;
-import organizador.servicios.AsignadorPruebaService;
-import organizador.servicios.DatosPruebaAsignacionesService;
+import organizador.servicios.AsignadorService;
 import organizador.servicios.GestorEspacios;
 import organizador.servicios.GestorPropuestas;
 
@@ -25,23 +24,20 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Controller
-public class AsignadorPruebaController {
+public class AsignacionController {
 
-    private final AsignadorPruebaService asignador;
-    private final DatosPruebaAsignacionesService datosPrueba;
+    private final AsignadorService asignador;
     private final UsuarioRepository usuarios;
 
     private final GestorEspacios gestorEspacios;
     private final GestorPropuestas gestorPropuestas;
 
-    public AsignadorPruebaController(
-            AsignadorPruebaService asignador,
-            DatosPruebaAsignacionesService datosPrueba,
-            UsuarioRepository usuarios,GestorEspacios gestorEspacios,
+    public AsignacionController(
+            AsignadorService asignador,
+            UsuarioRepository usuarios, GestorEspacios gestorEspacios,
             GestorPropuestas gestorPropuestas) {
 
         this.asignador = asignador;
-        this.datosPrueba = datosPrueba;
         this.usuarios = usuarios;
         this.gestorEspacios = gestorEspacios;
         this.gestorPropuestas = gestorPropuestas;
@@ -314,7 +310,7 @@ public class AsignadorPruebaController {
     public String procesar(RedirectAttributes mensajes) {
 
         try {
-            AsignadorPruebaService.ResultadoProcesamiento resultado =
+            AsignadorService.ResultadoProcesamiento resultado =
                     asignador.procesarPendientes();
 
             mensajes.addFlashAttribute(
@@ -335,7 +331,7 @@ public class AsignadorPruebaController {
     public String reintentar(RedirectAttributes mensajes) {
 
         try {
-            AsignadorPruebaService.ResultadoProcesamiento resultado =
+            AsignadorService.ResultadoProcesamiento resultado =
                     asignador.reintentarPendientes();
 
             mensajes.addFlashAttribute(
@@ -348,27 +344,6 @@ public class AsignadorPruebaController {
 
         } catch (IllegalStateException e) {
             mensajes.addFlashAttribute("error", e.getMessage());
-        }
-
-        return "redirect:/prueba-asignaciones";
-    }
-
-    @PostMapping("/prueba-asignaciones/cargar-datos")
-    public String cargarDatos(RedirectAttributes mensajes) {
-
-        try {
-            datosPrueba.cargar();
-
-            mensajes.addFlashAttribute(
-                    "ok",
-                    "Datos de ejemplo cargados (sin duplicarlos)."
-            );
-
-        } catch (RuntimeException e) {
-            mensajes.addFlashAttribute(
-                    "error",
-                    "No se pudieron cargar los datos: " + e.getMessage()
-            );
         }
 
         return "redirect:/prueba-asignaciones";
