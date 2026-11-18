@@ -1,4 +1,3 @@
-
 package organizador.servicios;
 
 import organizador.modelos.Asignacion;
@@ -29,6 +28,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Representa el servicio principal de orquestación y lógica de negocio para la gestión,
+ * evaluación y asignación de espacios físicos a las solicitudes académicas.
+ * Coordina las operaciones entre repositorios de datos, reglas de prioridad,
+ * servicios auxiliares de gestión y el motor de inferencia de Prolog según el
+ * ciclo o modo de funcionamiento del periodo académico.
+ */
 @Service
 public class AsignadorService {
 
@@ -46,6 +52,33 @@ public class AsignadorService {
     private final PrologService prologService;
     private final ConfiguracionService configuracionService;
 
+    /**
+     * Objetivo:
+     * Inicializar el servicio inyectando todas las dependencias requeridas (repositorios y servicios auxiliares).
+     *
+     * Precondiciones:
+     * - Todas las instancias de los componentes pasados por parámetro deben estar disponibles e instanciadas por el contenedor de Spring.
+     *
+     * Parámetros:
+     * @param usuarios Repositorio para la gestión de usuarios.
+     * @param materias Repositorio para la gestión de materias.
+     * @param solicitudes Repositorio para la gestión de solicitudes.
+     * @param asignaciones Repositorio para la gestión de asignaciones confirmadas.
+     * @param cumplimientos Repositorio con el historial de cumplimiento de solicitudes.
+     * @param reservas Repositorio para la gestión de reservas puntuales de espacios.
+     * @param gestorEspacios Servicio auxiliar para el manejo y consulta de espacios físicos.
+     * @param gestorSolicitudes Servicio de validación y control de solicitudes.
+     * @param calculadorPrioridad Servicio de cálculo de puntajes y ordenamiento de prioridades.
+     * @param gestorAsignaciones Servicio de generación de entidades de asignación.
+     * @param prologService Servicio de interfaz con el motor lógico Prolog.
+     * @param configuracionService Servicio de consulta de configuración y modos del sistema.
+     *
+     * Retorno:
+     * Instancia configurada de {@link AsignadorService}.
+     *
+     * Postcondiciones:
+     * - Las dependencias del servicio quedan asociadas a sus atributos inmutables.
+     */
     public AsignadorService(
             UsuarioRepository usuarios,
             MateriaRepository materias,
@@ -76,14 +109,36 @@ public class AsignadorService {
     }
 
     /**
-     * Recibe una solicitud y determina qué hacer según
-     * el modo de funcionamiento del sistema.
-     * <p>
-     * En planificación:
-     * Guarda la solicitud como pendiente.
-     * <p>
-     * En cursada:
-     * Guarda y evalúa individualmente la solicitud.
+     * Objetivo:
+     * Registrar una nueva solicitud académica en el sistema y determinar su flujo de procesamiento
+     * según el modo de funcionamiento actual (guardar como pendiente en recepción o evaluarla inmediatamente en cursada).
+     *
+     * Precondiciones:
+     * - El sistema no debe encontrarse en modo FUERA_DE_PERIODO.
+     * - Los identificadores de profesor y materia deben existir en la base de datos.
+     * - El usuario indicado debe poseer rol de profesor.
+     * - Los datos de la solicitud (horarios, días, capacidad) deben ser válidos conforme a {@link GestorSolicitudes}.
+     *
+     * Parámetros:
+     * @param idProfesor Identificador único (String) del profesor solicitante.
+     * @param idMateria Identificador único (String) de la materia asociada.
+     * @param cantidadAlumnos Cantidad estimada de alumnos para la actividad.
+     * @param dias Lista de días de la semana ({@link List}<{@link DayOfWeek}>) en los que se solicita el espacio.
+     * @param horaInicio Horario de inicio ({@link LocalTime}) de la actividad.
+     * @param horaFin Horario de finalización ({@link LocalTime}) de la actividad.
+     * @param tipoActividad Descripción o clasificación del tipo de actividad académica a realizar.
+     *
+     * Retorno:
+     * @return {@link ModoFuncionamiento} Modo de funcionamiento vigente bajo el cual se recibió la solicitud.
+     *
+     * Postcondiciones:
+     * - La solicitud queda persistida en la base de datos.
+     * - Si el modo es CURSADA, se intenta asignar un espacio inmediatamente; en caso de éxito se crea y persiste una asignación.
+     * - En cualquier otro modo admisible (ej. recepción), la solicitud permanece persistida en estado pendiente para resolución posterior.
+     *
+     * Excepciones:
+     * @throws IllegalArgumentException Si el sistema está fuera de período, si el profesor o materia no existen,
+     *                                  si el usuario no es profesor o si los datos de la solicitud fallan la validación.
      */
     @Transactional
     public ModoFuncionamiento crearSolicitud(
@@ -147,10 +202,25 @@ public class AsignadorService {
     }
 
     /**
-     * Procesa una única solicitud durante la cursada.
-     * <p>
-     * Prolog comprueba compatibilidad y disponibilidad.
-     * Si no encuentra espacio, la solicitud permanece pendiente.
+     * Objetivo:
+     * Evaluar de forma aislada una única solicitud durante el período de cursada, asignándole un espacio
+     * compatible mediante Prolog si la disponibilidad lo permite.
+     *
+     * Precondiciones:
+     * - La solicitud debe estar instanciada y persistida previamente.
+     * - Los servicios auxiliares y la base de datos deben estar disponibles.
+     *
+     * Parámetros:
+     * @param solicitud Entidad {@link Solicitud} individual que se desea evaluar y asignar.
+     *
+     * Retorno:
+     * Ninguno (método {@code void}).
+     *
+     * Postcondiciones:
+     * - La solicitud actualiza su puntaje de prioridad secundario.
+     * - Si Prolog encuentra un espacio compatible y disponible, se crea y persiste una nueva {@link Asignacion}
+     *   y se actualiza el estado de la solicitud.
+     * - Si no se encuentra espacio disponible, la solicitud permanece guardada en estado pendiente.
      */
     private void procesarSolicitudIndividual(Solicitud solicitud) {
 
@@ -193,14 +263,31 @@ public class AsignadorService {
         asignaciones.save(asignacion);
     }
 
-
-
     /**
-     * Procesa todas las solicitudes pendientes juntas.
-     * <p>
-     * Se utiliza al finalizar la recepción y también puede
-     * ser ejecutado por un administrador durante la cursada
-     * para volver a intentar asignar solicitudes pendientes.
+     * Objetivo:
+     * Procesar por lote la totalidad de solicitudes pendientes acumuladas en el sistema,
+     * ordenándolas por prioridad y asignándoles espacios según compatibilidad horaria y física.
+     *
+     * Precondiciones:
+     * - El modo de funcionamiento no debe ser RECEPCION_SOLICITUDES (debe haberse cerrado dicho período).
+     * - El modo de funcionamiento no debe ser FUERA_DE_PERIODO.
+     * - La base de datos debe ser accesible.
+     *
+     * Parámetros:
+     * Ninguno.
+     *
+     * Retorno:
+     * @return {@link ResultadoProcesamiento} Registro con el balance de solicitudes aprobadas y rechazadas por validación.
+     *
+     * Postcondiciones:
+     * - Las solicitudes no válidas se marcan como RECHAZADA y se persisten.
+     * - Para cada solicitud válida que encuentra aula compatible, se crea y persiste una {@link Asignacion},
+     *   bloqueando ese espacio para las solicitudes consecutivas dentro del mismo ciclo.
+     * - Las solicitudes que no encuentran aula permanecen pendientes para futuros intentos.
+     *
+     * Excepciones:
+     * @throws IllegalStateException Si se invoca mientras aún está abierto el período de recepción
+     *                               o si el sistema está fuera del período académico.
      */
     @Transactional
     public ResultadoProcesamiento procesarPendientes() {
@@ -292,14 +379,28 @@ public class AsignadorService {
         return new ResultadoProcesamiento(aprobadas, rechazadas);
     }
 
-
-
     /**
-     * Vuelve a intentar asignar las solicitudes pendientes
-     * durante el período de cursada.
-     * <p>
-     * A diferencia de la planificación inicial, si Prolog
-     * no encuentra un espacio, la solicitud sigue pendiente.
+     * Objetivo:
+     * Volver a ejecutar el procesamiento de asignación sobre las solicitudes pendientes
+     * exclusivamente durante el período de cursada académica.
+     *
+     * Precondiciones:
+     * - El sistema debe encontrarse estrictamente en modo CURSADA.
+     * - La base de datos debe ser accesible.
+     *
+     * Parámetros:
+     * Ninguno.
+     *
+     * Retorno:
+     * @return {@link ResultadoProcesamiento} Registro con el recuento de solicitudes que lograron asignarse (aprobadas)
+     *         y aquellas rechazadas formalmente por fallas de validación.
+     *
+     * Postcondiciones:
+     * - Las solicitudes asignadas generan un nuevo registro de {@link Asignacion} y actualizan su estado.
+     * - Aquellas que no consiguen espacio libre continúan en estado pendiente.
+     *
+     * Excepciones:
+     * @throws IllegalStateException Si el modo actual del sistema es distinto de CURSADA.
      */
     @Transactional
     public ResultadoProcesamiento reintentarPendientes() {
@@ -382,7 +483,20 @@ public class AsignadorService {
     }
 
     /**
-     * Obtiene los profesores registrados.
+     * Objetivo:
+     * Obtener el listado de usuarios que poseen el rol de profesor, ordenados alfabéticamente por nombre.
+     *
+     * Precondiciones:
+     * - La base de datos debe estar disponible para operaciones de solo lectura.
+     *
+     * Parámetros:
+     * Ninguno.
+     *
+     * Retorno:
+     * @return {@link List}<{@link Usuario}> Lista de usuarios filtrados por rol de profesor y ordenados por nombre.
+     *
+     * Postcondiciones:
+     * - Operación de solo lectura; los datos en la base de datos se mantienen inalterados.
      */
     @Transactional(readOnly = true)
     public List<Usuario> obtenerProfesores() {
@@ -394,7 +508,20 @@ public class AsignadorService {
     }
 
     /**
-     * Obtiene las materias registradas.
+     * Objetivo:
+     * Recuperar la lista completa de materias registradas, ordenadas alfabéticamente por su nombre.
+     *
+     * Precondiciones:
+     * - La base de datos debe estar disponible para operaciones de solo lectura.
+     *
+     * Parámetros:
+     * Ninguno.
+     *
+     * Retorno:
+     * @return {@link List}<{@link Materia}> Lista con todas las materias ordenadas de forma ascendente por nombre.
+     *
+     * Postcondiciones:
+     * - Operación de solo lectura; el estado de la base de datos no sufre modificaciones.
      */
     @Transactional(readOnly = true)
     public List<Materia> obtenerMaterias() {
@@ -405,14 +532,45 @@ public class AsignadorService {
     }
 
     /**
-     * Prepara datos simples para que Thymeleaf
-     * no acceda a listas JPA diferidas.
+     * Objetivo:
+     * Obtener el resumen tabular global de todas las solicitudes y sus aulas asignadas para la vista administrativa.
+     *
+     * Precondiciones:
+     * - La base de datos debe estar disponible para operaciones de solo lectura.
+     *
+     * Parámetros:
+     * Ninguno.
+     *
+     * Retorno:
+     * @return {@link List}<{@link FilaSolicitud}> Lista de DTOs simplificados con todas las solicitudes del sistema.
+     *
+     * Postcondiciones:
+     * - Operación de solo lectura; no genera efectos secundarios en la base de datos.
      */
     @Transactional(readOnly = true)
     public List<FilaSolicitud> obtenerResultados() {
         return obtenerResultados(null, true);
     }
 
+    /**
+     * Objetivo:
+     * Construir y retornar una lista de representaciones simplificadas (DTO {@link FilaSolicitud})
+     * de las solicitudes y sus asignaciones, aplicando filtros según el rol del usuario (administrador o profesor).
+     *
+     * Precondiciones:
+     * - La base de datos debe estar disponible para operaciones de solo lectura.
+     *
+     * Parámetros:
+     * @param idProfesor Identificador único (String) del profesor en sesión, o {@code null} si es administrador.
+     * @param esAdministrador Valor booleano que determina si se tienen permisos para visualizar la totalidad de solicitudes.
+     *
+     * Retorno:
+     * @return {@link List}<{@link FilaSolicitud}> Lista de filas ordenadas por identificador de solicitud,
+     *         mostrando los datos del curso, horarios, estado y aula asignada (o "-" si no posee).
+     *
+     * Postcondiciones:
+     * - Operación de solo lectura; las entidades y colecciones diferidas son transformadas en objetos inmutables desacoplados de JPA.
+     */
     @Transactional(readOnly = true)
     public List<FilaSolicitud> obtenerResultados(
             String idProfesor,
@@ -452,15 +610,35 @@ public class AsignadorService {
                 .toList();
     }
 
+    /**
+     * Representa el balance consolidado del procesamiento por lote de solicitudes.
+     *
+     * @param aprobadas Cantidad de solicitudes a las que se les logró asignar un espacio.
+     * @param rechazadas Cantidad de solicitudes denegadas formalmente por inconsistencias o errores de validación.
+     */
     public record ResultadoProcesamiento(
             int aprobadas,
             int rechazadas) {
     }
 
-
     /**
-     * Obtiene las asignaciones del profesor actual.
-     * El administrador puede consultar las de todos.
+     * Objetivo:
+     * Recuperar las asignaciones registradas y convertirlas a un modelo simplificado (DTO {@link FilaAsignacion}),
+     * restringiendo la consulta al profesor solicitante a menos que se trate de un administrador.
+     *
+     * Precondiciones:
+     * - La base de datos debe estar disponible para operaciones de solo lectura.
+     * - Si {@code esAdministrador} es {@code false}, {@code idProfesor} debe ser un identificador válido.
+     *
+     * Parámetros:
+     * @param idProfesor Identificador único (String) del profesor para filtrar las asignaciones.
+     * @param esAdministrador Valor booleano que indica si se debe omitir el filtro y listar todas las asignaciones existentes.
+     *
+     * Retorno:
+     * @return {@link List}<{@link FilaAsignacion}> Lista de asignaciones procesadas, ordenadas por el nombre de la materia.
+     *
+     * Postcondiciones:
+     * - Operación de solo lectura; los datos en la base de datos permanecen inmutables.
      */
     @Transactional(readOnly = true)
     public List<FilaAsignacion> obtenerAsignaciones(
@@ -490,6 +668,19 @@ public class AsignadorService {
                 .toList();
     }
 
+    /**
+     * Representa un registro de transferencia de datos (DTO) con los detalles planos de una asignación,
+     * optimizado para su renderizado en plantillas de vista (UI).
+     *
+     * @param id Identificador único de la asignación.
+     * @param profesor Nombre del profesor a cargo.
+     * @param materia Nombre de la materia asignada.
+     * @param aula Nombre del espacio físico o aula asignada.
+     * @param dias Cadena descriptiva con los días de cursada separados por comas.
+     * @param inicio Horario de inicio del bloque asignado.
+     * @param fin Horario de fin del bloque asignado.
+     * @param estado Estado formal de la asignación (ej. ACEPTADA, RECHAZADA).
+     */
     public record FilaAsignacion(
             String id,
             String profesor,
@@ -502,7 +693,21 @@ public class AsignadorService {
     ) {
     }
 
-
+    /**
+     * Representa un registro de transferencia de datos (DTO) que consolida el estado, datos académicos
+     * y el aula resultante de una solicitud para presentación en vistas de usuario o administración.
+     *
+     * @param id Identificador único de la solicitud.
+     * @param profesor Nombre del docente que inició la solicitud.
+     * @param materia Nombre de la materia requerida.
+     * @param anio Año de la carrera al que pertenece la materia.
+     * @param dias Cadena de texto con los días solicitados separados por coma.
+     * @param inicio Horario de inicio pedido.
+     * @param fin Horario de fin pedido.
+     * @param estado Estado actual de la solicitud (PENDIENTE, ASIGNADA, RECHAZADA, etc.).
+     * @param puntaje Puntaje numérico de prioridad calculado para la solicitud.
+     * @param aula Nombre del aula asignada, o el valor "-" si aún no posee un espacio concedido.
+     */
     public record FilaSolicitud(
             String id,
             String profesor,

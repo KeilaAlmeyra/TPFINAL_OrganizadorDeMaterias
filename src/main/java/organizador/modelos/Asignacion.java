@@ -16,6 +16,10 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
 
+/**
+ *  Entidad que representa la reserva de un
+ */
+
 @Entity
 @Table(name = "asignaciones")
 public class Asignacion {
