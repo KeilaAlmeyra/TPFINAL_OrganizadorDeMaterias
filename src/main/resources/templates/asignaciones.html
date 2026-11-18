@@ -383,46 +383,7 @@
         </form>
     </section>
 
-    <!-- ACCIONES DEL ADMINISTRADOR -->
-    <div th:if="${esAdministrador}" class="acciones-admin">
 
-        <section>
-            <h2>Planificación inicial</h2>
-
-            <p>
-                Al finalizar el período de recepción, procesa las solicitudes
-                pendientes según su puntaje de prioridad y busca espacios
-                compatibles y disponibles.
-            </p>
-
-            <form th:action="@{/prueba-asignaciones/procesar}"
-                  method="post">
-
-                <button type="submit">
-                    Procesar solicitudes pendientes
-                </button>
-            </form>
-        </section>
-
-        <section>
-            <h2>Reintentar asignaciones</h2>
-
-            <p>
-                Durante la cursada, vuelve a buscar espacios para las
-                solicitudes que todavía no tienen un aula asignada.
-                Las solicitudes sin espacio compatible permanecen pendientes.
-            </p>
-
-            <form th:action="@{/prueba-asignaciones/reintentar}"
-                  method="post">
-
-                <button type="submit">
-                    Reintentar solicitudes pendientes
-                </button>
-            </form>
-        </section>
-
-    </div>
 
     <!-- PROPUESTAS ALTERNATIVAS -->
     <section th:if="${esAdministrador}">

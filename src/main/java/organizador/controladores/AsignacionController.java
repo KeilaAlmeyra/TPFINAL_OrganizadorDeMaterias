@@ -459,7 +459,7 @@ public class AsignacionController {
             mensajes.addFlashAttribute("error", e.getMessage());
         }
 
-        return "redirect:/prueba-asignaciones";
+        return "redirect:/configuracion";
     }
 
     @PostMapping("/prueba-asignaciones/reintentar")
@@ -481,6 +481,6 @@ public class AsignacionController {
             mensajes.addFlashAttribute("error", e.getMessage());
         }
 
-        return "redirect:/prueba-asignaciones";
+        return "redirect:/configuracion";
     }
 }
