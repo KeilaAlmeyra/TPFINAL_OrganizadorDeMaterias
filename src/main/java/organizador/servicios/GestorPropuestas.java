@@ -14,7 +14,6 @@ import organizador.repositorios.SolicitudRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
@@ -22,6 +21,14 @@ import java.util.UUID;
 import java.time.Duration;
 import java.util.ArrayList;
 
+/**
+ * Representa el servicio encargado de la administración y ciclo de vida
+ * de las propuestas alternativas de asignación.
+ *
+ * Permite formular nuevas ofertas de espacios y horarios para solicitudes
+ * no resueltas, validar su factibilidad mediante Prolog y gestionar
+ * la aceptación o rechazo por parte del docente responsable.
+ */
 @Service
 public class GestorPropuestas {
 
@@ -34,6 +41,18 @@ public class GestorPropuestas {
 
     private final GestorAsignaciones gestorAsignaciones;
 
+    /**
+     * Inicializa el servicio inyectando los repositorios de persistencia
+     * y los servicios colaboradores requeridos.
+     *
+     * @param solicitudRepository Repositorio de solicitudes.
+     * @param espacioRepository Repositorio de espacios físicos.
+     * @param propuestaRepository Repositorio de propuestas de asignación.
+     * @param asignacionRepository Repositorio de asignaciones confirmadas.
+     * @param reservaRepository Repositorio de reservas de espacios.
+     * @param prologService Servicio encargado de validar reglas y disponibilidad mediante Prolog.
+     * @param gestorAsignaciones Servicio auxiliar para formalizar y crear asignaciones.
+     */
     public GestorPropuestas(
             SolicitudRepository solicitudRepository,
             EspacioRepository espacioRepository,
@@ -168,7 +187,31 @@ public class GestorPropuestas {
             LocalTime fin) {
     }
     /**
-     * Crea una propuesta alternativa para una solicitud pendiente.
+     * Crea y persiste una propuesta de asignación alternativa
+     * para una solicitud académica pendiente, comprobando su
+     * compatibilidad y disponibilidad mediante Prolog.
+     *
+     * Precondiciones:
+     * - La solicitud y el espacio deben existir.
+     * - La solicitud debe encontrarse pendiente.
+     * - Los días y horarios deben definir un rango válido.
+     * - El espacio debe ser compatible y estar disponible.
+     *
+     * @param solicitudId Identificador de la solicitud.
+     * @param espacioId Identificador del espacio físico ofrecido.
+     * @param dias Días de la semana propuestos.
+     * @param horaInicio Horario de inicio propuesto.
+     * @param horaFin Horario de finalización propuesto.
+     * @return La propuesta creada y persistida.
+     *
+     * Postcondiciones:
+     * - La propuesta queda almacenada en estado pendiente.
+     * - La solicitud original conserva sus datos y estado.
+     *
+     * @throws IllegalArgumentException Si no existe la solicitud o el
+     * espacio, si la solicitud no está pendiente o si no hay disponibilidad.
+     * @throws IllegalStateException Si ya existe una propuesta pendiente
+     * para esa solicitud.
      */
     @Transactional
     public PropuestaAsignacion crearPropuesta(
@@ -231,9 +274,6 @@ public class GestorPropuestas {
     }
 
     /**
-     * Obtiene las propuestas alternativas correspondientes a un profesor.
-     */
-    /**
      * Obtiene únicamente las propuestas pendientes de respuesta
      * correspondientes a un profesor.
      */
@@ -282,7 +322,26 @@ public class GestorPropuestas {
     }
 
     /**
-     * Acepta una propuesta y genera la asignación definitiva.
+     * Acepta una propuesta de asignación alternativa y genera
+     * la asignación definitiva para la solicitud correspondiente.
+     *
+     * Precondiciones:
+     * - La propuesta debe existir y encontrarse pendiente.
+     * - El profesor debe ser el propietario de la solicitud.
+     * - La solicitud original debe continuar pendiente.
+     * - El espacio debe seguir disponible en los días y horarios propuestos.
+     *
+     * Postcondiciones:
+     * - La propuesta queda marcada como aceptada.
+     * - La solicitud original se actualiza mediante el proceso de asignación.
+     * - Se crea y persiste una nueva asignación definitiva.
+     *
+     * @param propuestaId Identificador de la propuesta.
+     * @param profesorId Identificador del profesor que responde.
+     * @throws IllegalArgumentException Si la propuesta no existe o el
+     * profesor no tiene permiso para responderla.
+     * @throws IllegalStateException Si la propuesta ya fue respondida,
+     * la solicitud dejó de estar pendiente o el espacio ya no está disponible.
      */
     @Transactional
     public void aceptarPropuesta(String propuestaId, String profesorId) {
@@ -342,7 +401,21 @@ public class GestorPropuestas {
         asignacionRepository.save(asignacion);
     }
     /**
-     * Rechaza una propuesta sin modificar la solicitud original.
+     * Rechaza una propuesta alternativa sin modificar la solicitud original.
+     *
+     * Precondiciones:
+     * - La propuesta debe existir y encontrarse pendiente.
+     * - El profesor debe ser el propietario de la solicitud.
+     *
+     * Postcondiciones:
+     * - La propuesta queda marcada como rechazada.
+     * - La solicitud original conserva sus datos y estado.
+     *
+     * @param propuestaId Identificador de la propuesta.
+     * @param profesorId Identificador del profesor que responde.
+     * @throws IllegalArgumentException Si la propuesta no existe o el
+     * profesor no tiene permiso para responderla.
+     * @throws IllegalStateException Si la propuesta ya fue respondida.
      */
     @Transactional
     public void rechazarPropuesta(String propuestaId, String profesorId) {
@@ -367,8 +440,13 @@ public class GestorPropuestas {
     }
 
     /**
-     * Cancela una propuesta enviada por el administrador.
-     * La solicitud original permanece pendiente.
+     * Cancela una propuesta alternativa enviada por el administrador.
+     *
+     * La cancelación afecta únicamente a la propuesta y conserva
+     * la solicitud original pendiente.
+     *
+     * @param propuestaId Identificador de la propuesta que se cancela.
+     * @throws IllegalArgumentException Si no existe la propuesta.
      */
     @Transactional
     public void cancelarPropuesta(String propuestaId) {
@@ -383,8 +461,27 @@ public class GestorPropuestas {
     }
 
     /**
-     * Modifica una propuesta pendiente y vuelve a validar
-     * su compatibilidad y disponibilidad mediante Prolog.
+     * Modifica los datos de una propuesta que todavía está pendiente
+     * de respuesta y vuelve a comprobar su compatibilidad y disponibilidad
+     * mediante Prolog.
+     *
+     * Precondiciones:
+     * - La propuesta debe existir y estar pendiente.
+     * - El espacio debe cumplir los requisitos de la solicitud.
+     * - El horario y los días propuestos deben estar disponibles.
+     *
+     * Postcondiciones:
+     * - La propuesta conserva su identidad y solicitud original.
+     * - Se actualizan el espacio, los días y el horario ofrecidos.
+     *
+     * @param propuestaId Identificador de la propuesta.
+     * @param espacioId Identificador del nuevo espacio.
+     * @param dias Nuevos días propuestos.
+     * @param horaInicio Nuevo horario de inicio.
+     * @param horaFin Nuevo horario de finalización.
+     * @throws IllegalArgumentException Si no existe la propuesta o el
+     * espacio, si el espacio no es compatible o no está disponible.
+     * @throws IllegalStateException Si la propuesta ya no está pendiente.
      */
     @Transactional
     public void editarPropuesta(
