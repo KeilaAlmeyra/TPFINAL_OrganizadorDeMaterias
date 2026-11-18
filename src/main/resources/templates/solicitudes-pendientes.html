@@ -241,7 +241,15 @@
 
             <p>
                 <strong>Días solicitados:</strong>
-                <span th:text="${solicitud.dias}"></span>
+
+                <span th:each="dia, iter : ${solicitud.dias}">
+                    <span th:text="${dia == T(java.time.DayOfWeek).MONDAY ? 'Lunes' :
+                        dia == T(java.time.DayOfWeek).TUESDAY ? 'Martes' :
+                        dia == T(java.time.DayOfWeek).WEDNESDAY ? 'Miércoles' :
+                        dia == T(java.time.DayOfWeek).THURSDAY ? 'Jueves' :
+                        dia == T(java.time.DayOfWeek).FRIDAY ? 'Viernes' : dia}">
+                    </span><span th:if="${!iter.last}">, </span>
+                </span>
             </p>
 
             <p>
@@ -259,74 +267,77 @@
                 <span>PENDIENTE</span>
             </p>
 
-            <h3>Proponer una alternativa</h3>
+            <div th:if="${puedeGestionarPropuestas}">
 
+                <h3>Proponer una alternativa</h3>
 
-            <form method="post"
-                  th:action="@{/propuestas/crear}"
-                  th:attr="data-solicitud-id=${solicitud.id},
-               data-horarios-url=@{/propuestas/horarios-disponibles}">
+                <form method="post"
+                      th:action="@{/propuestas/crear}"
+                      th:attr="data-solicitud-id=${solicitud.id},
+                   data-horarios-url=@{/propuestas/horarios-disponibles}">
 
-                <input type="hidden" name="origen" value="solicitudes-pendientes">
+                    <input type="hidden" name="origen" value="solicitudes-pendientes">
 
-                <input type="hidden"
-                       name="solicitudId"
-                       th:value="${solicitud.id}">
+                    <input type="hidden"
+                           name="solicitudId"
+                           th:value="${solicitud.id}">
 
-                <label>Espacio alternativo:</label>
+                    <label>Espacio alternativo:</label>
 
-                <select name="espacioId" class="selector-espacio" required>
-                    <option value="">Seleccionar espacio</option>
+                    <select name="espacioId" class="selector-espacio" required>
+                        <option value="">Seleccionar espacio</option>
 
-                    <option th:each="espacio : ${espaciosPorSolicitud[solicitud.id]}"
-                            th:value="${espacio.id}"
-                            th:text="|${espacio.nombre} - ${espacio.capacidadMaxima} lugares (${espacio.tipoEspacio})|">
-                    </option>
-                </select>
-
-                <p><strong>Días propuestos:</strong></p>
-
-                <label>
-                    <input type="checkbox" name="dias" value="MONDAY">
-                    Lunes
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="TUESDAY">
-                    Martes
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="WEDNESDAY">
-                    Miércoles
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="THURSDAY">
-                    Jueves
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="FRIDAY">
-                    Viernes
-                </label>
-
-                <p>
-                    <label>Horarios disponibles:</label>
-
-                    <select class="selector-horario" required disabled>
-                        <option value="">Primero seleccioná un espacio y días</option>
+                        <option th:each="espacio : ${espaciosPorSolicitud[solicitud.id]}"
+                                th:value="${espacio.id}"
+                                th:text="|${espacio.nombre} - ${espacio.capacidadMaxima} lugares (${espacio.tipoEspacio})|">
+                        </option>
                     </select>
-                </p>
 
-                <input type="hidden" name="horaInicio">
-                <input type="hidden" name="horaFin">
+                    <p><strong>Días propuestos:</strong></p>
 
-                <button class="aprobar" type="submit">
-                    Enviar propuesta al profesor
-                </button>
+                    <label>
+                        <input type="checkbox" name="dias" value="MONDAY">
+                        Lunes
+                    </label>
 
-            </form>
+                    <label>
+                        <input type="checkbox" name="dias" value="TUESDAY">
+                        Martes
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="dias" value="WEDNESDAY">
+                        Miércoles
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="dias" value="THURSDAY">
+                        Jueves
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="dias" value="FRIDAY">
+                        Viernes
+                    </label>
+
+                    <p>
+                        <label>Horarios disponibles:</label>
+
+                        <select class="selector-horario" required disabled>
+                            <option value="">Primero seleccioná un espacio y días</option>
+                        </select>
+                    </p>
+
+                    <input type="hidden" name="horaInicio">
+                    <input type="hidden" name="horaFin">
+
+                    <button class="aprobar" type="submit">
+                        Enviar propuesta al profesor
+                    </button>
+
+                </form>
+
+            </div>
 
         </div>
 
@@ -364,7 +375,15 @@
 
             <p>
                 <strong>Días propuestos:</strong>
-                <span th:text="${propuesta.diasPropuestos}"></span>
+
+                <span th:each="dia, iter : ${propuesta.diasPropuestos}">
+                    <span th:text="${dia == T(java.time.DayOfWeek).MONDAY ? 'Lunes' :
+                        dia == T(java.time.DayOfWeek).TUESDAY ? 'Martes' :
+                        dia == T(java.time.DayOfWeek).WEDNESDAY ? 'Miércoles' :
+                        dia == T(java.time.DayOfWeek).THURSDAY ? 'Jueves' :
+                        dia == T(java.time.DayOfWeek).FRIDAY ? 'Viernes' : dia}">
+                    </span><span th:if="${!iter.last}">, </span>
+                </span>
             </p>
 
             <p>
@@ -377,83 +396,92 @@
                 Esperando respuesta del profesor
             </p>
 
-            <h3>Editar propuesta</h3>
+            <div th:if="${puedeGestionarPropuestas}">
 
-            <form method="post"
-                  th:action="@{/propuestas/{id}/editar(id=${propuesta.id})}"
-                  th:attr="data-solicitud-id=${propuesta.solicitud.id},
+                <h3>Editar propuesta</h3>
+
+                <form method="post"
+                      th:action="@{/propuestas/{id}/editar(id=${propuesta.id})}"
+                      th:attr="data-solicitud-id=${propuesta.solicitud.id},
                    data-horarios-url=@{/propuestas/horarios-disponibles},
                    data-hora-inicio=${propuesta.horaInicio},
                    data-hora-fin=${propuesta.horaFin}">
 
-                <label>Espacio alternativo:</label>
+                    <label>Espacio alternativo:</label>
 
-                <select name="espacioId" class="selector-espacio" required>
-                    <option value="">Seleccionar espacio</option>
+                    <select name="espacioId" class="selector-espacio" required>
+                        <option value="">Seleccionar espacio</option>
 
-                    <option th:each="espacio : ${espaciosPorPropuesta[propuesta.id]}"
-                            th:value="${espacio.id}"
-                            th:selected="${espacio.id == propuesta.espacio.id}"
-                            th:text="|${espacio.nombre} - ${espacio.capacidadMaxima} lugares (${espacio.tipoEspacio})|">
-                    </option>
-                </select>
-
-                <p><strong>Días propuestos:</strong></p>
-
-                <label>
-                    <input type="checkbox" name="dias" value="MONDAY"
-                           th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).MONDAY)}">
-                    Lunes
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="TUESDAY"
-                           th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).TUESDAY)}">
-                    Martes
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="WEDNESDAY"
-                           th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).WEDNESDAY)}">
-                    Miércoles
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="THURSDAY"
-                           th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).THURSDAY)}">
-                    Jueves
-                </label>
-
-                <label>
-                    <input type="checkbox" name="dias" value="FRIDAY"
-                           th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).FRIDAY)}">
-                    Viernes
-                </label>
-
-                <p>
-                    <label>Horarios disponibles:</label>
-
-                    <select class="selector-horario" required disabled>
-                        <option value="">Consultando horario actual...</option>
+                        <option th:each="espacio : ${espaciosPorPropuesta[propuesta.id]}"
+                                th:value="${espacio.id}"
+                                th:selected="${espacio.id == propuesta.espacio.id}"
+                                th:text="|${espacio.nombre} - ${espacio.capacidadMaxima} lugares (${espacio.tipoEspacio})|">
+                        </option>
                     </select>
-                </p>
 
-                <input type="hidden" name="horaInicio">
-                <input type="hidden" name="horaFin">
+                    <p><strong>Días propuestos:</strong></p>
 
-                <button class="aprobar" type="submit">
-                    Guardar cambios
-                </button>
-            </form>
+                    <label>
+                        <input type="checkbox" name="dias" value="MONDAY"
+                               th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).MONDAY)}">
+                        Lunes
+                    </label>
 
-            <form method="post"
-                  th:action="@{/propuestas/{id}/cancelar(id=${propuesta.id})}"
-                  onsubmit="return confirm('¿Querés cancelar esta propuesta? La solicitud original volverá a estar disponible.');">
+                    <label>
+                        <input type="checkbox" name="dias" value="TUESDAY"
+                               th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).TUESDAY)}">
+                        Martes
+                    </label>
 
-                <button class="rechazar" type="submit">
-                    Cancelar propuesta
-                </button>
-            </form>
+                    <label>
+                        <input type="checkbox" name="dias" value="WEDNESDAY"
+                               th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).WEDNESDAY)}">
+                        Miércoles
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="dias" value="THURSDAY"
+                               th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).THURSDAY)}">
+                        Jueves
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="dias" value="FRIDAY"
+                               th:checked="${propuesta.diasPropuestos.contains(T(java.time.DayOfWeek).FRIDAY)}">
+                        Viernes
+                    </label>
+
+                    <p>
+                        <label>Horarios disponibles:</label>
+
+                        <select class="selector-horario" required disabled>
+                            <option value="">Consultando horario actual...</option>
+                        </select>
+                    </p>
+
+                    <input type="hidden" name="horaInicio">
+                    <input type="hidden" name="horaFin">
+
+                    <button class="aprobar" type="submit">
+                        Guardar cambios
+                    </button>
+                </form>
+
+                <form method="post"
+                      th:action="@{/propuestas/{id}/cancelar(id=${propuesta.id})}"
+                      onsubmit="return confirm('¿Querés cancelar esta propuesta? La solicitud original volverá a estar disponible.');">
+
+                    <button class="rechazar" type="submit">
+                        Cancelar propuesta
+                    </button>
+                </form>
+
+            </div>
+
+            <p th:unless="${puedeGestionarPropuestas}">
+                La gestión de propuestas alternativas está deshabilitada durante
+                el período de recepción de solicitudes.
+            </p>
 
         </div>
     </section>

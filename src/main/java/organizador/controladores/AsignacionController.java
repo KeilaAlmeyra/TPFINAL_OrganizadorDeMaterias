@@ -100,6 +100,17 @@ public class AsignacionController {
         return "asignaciones";
     }
 
+    /**
+     * Consulta la capacidad máxima disponible para una materia.
+     */
+    @GetMapping("/prueba-asignaciones/capacidad-maxima")
+    @ResponseBody
+    public int obtenerCapacidadMaxima(
+            @RequestParam String materiaId) {
+
+        return asignador.obtenerCapacidadMaximaDisponible(materiaId);
+    }
+
     @GetMapping("/materias-pendientes")
     public String mostrarMateriasPendientes(
             Authentication authentication,

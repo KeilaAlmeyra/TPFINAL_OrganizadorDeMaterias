@@ -305,6 +305,10 @@
                            min="1"
                            value="20"
                            required>
+
+                    <small id="mensajeCapacidad" aria-live="polite">
+                        Seleccioná una materia para consultar la capacidad máxima.
+                    </small>
                 </div>
 
                 <!-- ACTIVIDAD -->
@@ -386,5 +390,68 @@
 
 </main>
 
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const materiaSelect = document.getElementById("materiaId");
+        const cantidadInput = document.getElementById("cantidadAlumnos");
+        const mensaje = document.getElementById("mensajeCapacidad");
+
+        materiaSelect.addEventListener("change", async () => {
+
+            const materiaId = materiaSelect.value;
+
+            cantidadInput.removeAttribute("max");
+            materiaSelect.setCustomValidity("");
+
+            if (!materiaId) {
+                mensaje.textContent =
+                    "Seleccioná una materia para consultar la capacidad máxima.";
+                return;
+            }
+
+            mensaje.textContent = "Consultando capacidad máxima...";
+
+            try {
+                const respuesta = await fetch(
+                    `/prueba-asignaciones/capacidad-maxima?materiaId=${encodeURIComponent(materiaId)}`
+                );
+
+                if (!respuesta.ok) {
+                    throw new Error("No se pudo consultar la capacidad.");
+                }
+
+                const capacidadMaxima = await respuesta.json();
+
+                if (capacidadMaxima <= 0) {
+                    mensaje.textContent =
+                        "No hay espacios disponibles compatibles con esta materia.";
+
+                    materiaSelect.setCustomValidity(
+                        "No hay espacios disponibles compatibles con esta materia."
+                    );
+
+                    return;
+                }
+
+                cantidadInput.max = capacidadMaxima;
+
+                mensaje.textContent =
+                    `La capacidad máxima disponible para esta materia es de ${capacidadMaxima} alumnos.`;
+
+                materiaSelect.setCustomValidity("");
+
+            } catch (error) {
+                mensaje.textContent =
+                    "No se pudo consultar la capacidad. Intentá nuevamente.";
+
+                materiaSelect.setCustomValidity(
+                    "No se pudo consultar la capacidad máxima."
+                );
+            }
+        });
+
+    });
+</script>
 </body>
 </html>

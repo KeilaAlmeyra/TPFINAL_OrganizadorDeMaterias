@@ -121,6 +121,14 @@ public class GestorPropuestas {
     }
 
     /**
+     * Indica si el administrador puede gestionar propuestas alternativas.
+     */
+    public boolean permiteGestionarPropuestas() {
+        return configuracionService.obtenerModoActual()
+                != ModoFuncionamiento.RECEPCION_SOLICITUDES;
+    }
+
+    /**
      * Busca los horarios disponibles para un espacio y varios días.
      *
      * Conserva la duración original de la solicitud.
@@ -473,6 +481,7 @@ public class GestorPropuestas {
      */
     @Transactional
     public void cancelarPropuesta(String propuestaId) {
+        validarPeriodoParaPropuestas();
 
         PropuestaAsignacion propuesta = propuestaRepository.findById(propuestaId)
                 .orElseThrow(() -> new IllegalArgumentException(

@@ -109,6 +109,24 @@ public class AsignadorService {
     }
 
     /**
+     * Obtiene la capacidad máxima de los espacios disponibles
+     * compatibles con el tipo requerido por una materia.
+     */
+    public int obtenerCapacidadMaximaDisponible(String idMateria) {
+
+        Materia materia = materias.findById(idMateria)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Materia inexistente."));
+
+        return gestorEspacios.obtenerDisponibles().stream()
+                .filter(espacio -> espacio.esDelTipo(
+                        materia.getTipoEspacioFrecuente()))
+                .mapToInt(Espacio::getCapacidadMaxima)
+                .max()
+                .orElse(0);
+    }
+
+    /**
      * Objetivo:
      * Registrar una nueva solicitud académica en el sistema y determinar su flujo de procesamiento
      * según el modo de funcionamiento actual (guardar como pendiente en recepción o evaluarla inmediatamente en cursada).
@@ -179,6 +197,21 @@ public class AsignadorService {
                 .orElseThrow(() ->
                         new IllegalArgumentException("Materia inexistente."));
 
+        int capacidadMaxima = obtenerCapacidadMaximaDisponible(idMateria);
+
+        if (capacidadMaxima == 0) {
+            throw new IllegalArgumentException(
+                    "No hay espacios disponibles compatibles con esta materia."
+            );
+        }
+
+        if (cantidadAlumnos > capacidadMaxima) {
+            throw new IllegalArgumentException(
+                    "La cantidad de alumnos supera la capacidad máxima disponible "
+                            + "para esta materia (" + capacidadMaxima + ")."
+            );
+        }
+
         Solicitud solicitud = new Solicitud(
                 UUID.randomUUID().toString(),
                 profesor,
@@ -196,7 +229,18 @@ public class AsignadorService {
             throw new IllegalArgumentException(error);
         }
 
-        // Guardamos primero la solicitud.
+        // Calculamos la prioridad al registrar la solicitud,
+        // independientemente del modo de funcionamiento.
+        List<RegistroCumplimiento> historial = cumplimientos.findAll();
+
+        solicitud.setPuntajePrioridad(
+                calculadorPrioridad.calcularPuntajePrioridad(
+                        solicitud,
+                        historial
+                )
+        );
+
+        // Guardamos la solicitud con su prioridad calculada.
         solicitudes.save(solicitud);
 
         if (modo == ModoFuncionamiento.CURSADA) {

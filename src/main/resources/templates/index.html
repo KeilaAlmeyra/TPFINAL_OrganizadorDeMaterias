@@ -181,16 +181,16 @@
 
         <nav class="indice">
             <a th:href="@{/consulta-espacios}">
-                Ver aulas
+                Consultar espacios
             </a>
 
 
             <a th:href="@{/prueba-asignaciones}">
-                Solicitar asignación
+                Solicitar espacio
             </a>
 
             <a th:href="@{/mis-asignaciones}">
-                Asignaciones
+                Solicitudes
             </a>
 
             <a th:href="@{/reservar}">
@@ -204,24 +204,24 @@
             <div th:if="${esAdministrador}" class="separador"></div>
 
             <a th:if="${esAdministrador}" th:href="@{/solicitudes-pendientes}">
-                Revisar solicitudes
+                Gestionar solicitudes
             </a>
 
             <a th:if="${esAdministrador}" th:href="@{/configuracion}">
-                Configuración académica
+                Configuración
             </a>
 
             <a th:if="${esAdministrador}" th:href="@{/espacios}">
-                Administrar espacios
+                Espacios
             </a>
 
             <a th:if="${esAdministrador}" th:href="@{/materias}">
-                Administrar materias
+                Materias
             </a>
 
 
             <a th:if="${esAdministrador}" th:href="@{/usuarios}">
-                Administrar usuarios
+                Usuarios
             </a>
 
             <form method="post" th:action="@{/logout}">
