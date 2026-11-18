@@ -2,7 +2,6 @@
 package organizador.servicios;
 
 import organizador.modelos.Asignacion;
-import organizador.modelos.Configuracion;
 import organizador.modelos.Espacio;
 import organizador.modelos.Materia;
 import organizador.modelos.ModoFuncionamiento;
@@ -31,7 +30,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class AsignadorPruebaService {
+public class AsignadorService {
 
     private final UsuarioRepository usuarios;
     private final MateriaRepository materias;
@@ -47,7 +46,7 @@ public class AsignadorPruebaService {
     private final PrologService prologService;
     private final ConfiguracionService configuracionService;
 
-    public AsignadorPruebaService(
+    public AsignadorService(
             UsuarioRepository usuarios,
             MateriaRepository materias,
             SolicitudRepository solicitudes,
@@ -79,10 +78,10 @@ public class AsignadorPruebaService {
     /**
      * Recibe una solicitud y determina qué hacer según
      * el modo de funcionamiento del sistema.
-     *
+     * <p>
      * En planificación:
      * Guarda la solicitud como pendiente.
-     *
+     * <p>
      * En cursada:
      * Guarda y evalúa individualmente la solicitud.
      */
@@ -156,7 +155,7 @@ public class AsignadorPruebaService {
 
     /**
      * Procesa una única solicitud durante la cursada.
-     *
+     * <p>
      * Prolog comprueba compatibilidad y disponibilidad.
      * Si no encuentra espacio, la solicitud permanece pendiente.
      */
@@ -205,7 +204,7 @@ public class AsignadorPruebaService {
 
     /**
      * Procesa todas las solicitudes pendientes juntas.
-     *
+     * <p>
      * Se utiliza al finalizar la recepción y también puede
      * ser ejecutado por un administrador durante la cursada
      * para volver a intentar asignar solicitudes pendientes.
@@ -306,7 +305,7 @@ public class AsignadorPruebaService {
     /**
      * Vuelve a intentar asignar las solicitudes pendientes
      * durante el período de cursada.
-     *
+     * <p>
      * A diferencia de la planificación inicial, si Prolog
      * no encuentra un espacio, la solicitud sigue pendiente.
      */

@@ -6,7 +6,7 @@ import organizador.repositorios.UsuarioRepository;
 import organizador.servicios.GestorEspacios;
 import organizador.servicios.ReservaService;
 import organizador.modelos.Solicitud;
-import organizador.servicios.AsignadorPruebaService;
+import organizador.servicios.AsignadorService;
 import organizador.modelos.Espacio;
 import organizador.servicios.GestorPropuestas;
 import organizador.modelos.PropuestaAsignacion;
@@ -35,14 +35,14 @@ public class ReservaController {
     private final UsuarioRepository usuarioRepository;
     private final GestorEspacios gestorEspacios;
 
-    private final AsignadorPruebaService asignadorPruebaService;
+    private final AsignadorService asignadorPruebaService;
     private final GestorPropuestas gestorPropuestas;
 
     public ReservaController(
             ReservaService reservaService,
             UsuarioRepository usuarioRepository,
             GestorEspacios gestorEspacios,
-            AsignadorPruebaService asignadorPruebaService,
+            AsignadorService asignadorPruebaService,
             GestorPropuestas gestorPropuestas) {
 
         this.reservaService = reservaService;
@@ -185,7 +185,7 @@ public class ReservaController {
         );
 
         // Solicitudes de asignación de aulas que siguen pendientes.
-        List<AsignadorPruebaService.FilaSolicitud> todasLasPendientes =
+        List<AsignadorService.FilaSolicitud> todasLasPendientes =
                 asignadorPruebaService.obtenerResultados(usuario.getId(), true)
                         .stream()
                         .filter(s -> Solicitud.PENDIENTE.equals(s.estado()))
@@ -203,7 +203,7 @@ public class ReservaController {
 
 // Solo mostramos para proponer aquellas solicitudes
 // que todavía no tienen una propuesta esperando respuesta.
-        List<AsignadorPruebaService.FilaSolicitud> pendientes =
+        List<AsignadorService.FilaSolicitud> pendientes =
                 todasLasPendientes.stream()
                         .filter(s -> !solicitudesConPropuesta.contains(s.id()))
                         .toList();
@@ -222,7 +222,7 @@ public class ReservaController {
 // Cada solicitud disponible para proponer recibe sus espacios compatibles.
         Map<String, List<Espacio>> espaciosPorSolicitud = new HashMap<>();
 
-        for (AsignadorPruebaService.FilaSolicitud solicitud : pendientes) {
+        for (AsignadorService.FilaSolicitud solicitud : pendientes) {
             espaciosPorSolicitud.put(
                     solicitud.id(),
                     gestorPropuestas.obtenerEspaciosCompatibles(solicitud.id())

@@ -40,10 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 @Transactional
-class AsignadorPruebaServiceTest {
+class AsignadorServiceTest {
 
     @Autowired
-    private AsignadorPruebaService asignador;
+    private AsignadorService asignador;
 
     @Autowired
     private UsuarioRepository usuarios;
