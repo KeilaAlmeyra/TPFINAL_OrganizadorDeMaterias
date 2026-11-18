@@ -114,27 +114,6 @@ public class Asignacion {
         estadoAsignacion = CANCELADA;
     }
 
-    public boolean seSuperponeCon(Asignacion otra) {
-
-        if (otra == null || !estaActiva() || !otra.estaActiva()) {
-            return false;
-        }
-
-        boolean mismoEspacio =
-                espacio.getId().equals(otra.espacio.getId());
-
-        boolean mismoDia =
-                !java.util.Collections.disjoint(
-                        diasAsignados, otra.diasAsignados
-                );
-
-        boolean mismoHorario =
-                horaInicioAsignada.isBefore(otra.horaFinAsignada)
-                        && otra.horaInicioAsignada.isBefore(horaFinAsignada);
-
-        return mismoEspacio && mismoDia && mismoHorario;
-    }
-
     @Override
     public String toString() {
         return "Asignación " + id + " - " + espacio.getNombre();
