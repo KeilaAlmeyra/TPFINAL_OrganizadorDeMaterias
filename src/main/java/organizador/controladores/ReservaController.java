@@ -177,7 +177,7 @@ public class ReservaController {
 
             return "redirect:/mis-reservas";
 
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             mensajes.addFlashAttribute("error", e.getMessage());
 
             return "redirect:/reservar";
