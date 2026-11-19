@@ -262,13 +262,13 @@
 
     <h1>Administración de materias</h1>
     <p class="descripcion">
-        Desde aquí podés registrar, modificar y administrar las materias de la carrera.
+        Desde aca se puede registrar, modificar y administrar las materias de la carrera.
     </p>
 
     <p class="mensaje ok" th:if="${ok}" th:text="${ok}"></p>
     <p class="mensaje error" th:if="${error}" th:text="${error}"></p>
 
-    <section>
+    <section id="formulario">
 
         <h2 th:text="${materiaEditar != null
                 ? 'Modificar materia'
@@ -404,11 +404,10 @@
                 <td>
                     <div class="acciones">
 
-                        <a th:href="@{/materias(editar=${materia.id})}">
-                            <button type="button">
-                                Editar
-                            </button>
-                        </a>
+                        <<form method="get" th:action="@{/materias#formulario}">
+                        <input type="hidden" name="editar" th:value="${materia.id}">
+                        <button type="submit">Editar</button>
+                    </form>
 
                         <form method="post"
                               th:action="@{/materias/eliminar/{id}(id=${materia.id})}"
